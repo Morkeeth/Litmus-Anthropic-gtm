@@ -1,0 +1,50 @@
+[
+  {
+    "signal_id": "sig_real_01",
+    "type": "job_change",
+    "family": "social",
+    "person": {
+      "full_name": "PLACEHOLDER real VP",
+      "linkedin_url": "",
+      "new_title": "VP Sales",
+      "new_company": "PLACEHOLDER real company"
+    },
+    "org": { "name": "PLACEHOLDER real company", "domain": "" },
+    "context": "Past customer just joined as VP Sales. Should verify to REAL once corroborated.",
+    "detected_at": "2026-07-09T09:12:00Z",
+    "confidence": 0.72,
+    "expected_verdict": "REAL"
+  },
+  {
+    "signal_id": "sig_noise_01",
+    "type": "intent_surge",
+    "family": "web",
+    "person": {
+      "full_name": "PLACEHOLDER stale contact",
+      "linkedin_url": "",
+      "new_title": "Head of Growth",
+      "new_company": "PLACEHOLDER company they already left"
+    },
+    "org": { "name": "PLACEHOLDER company they already left", "domain": "" },
+    "context": "Signal claims this person is the buyer, but they left the company months ago. Should verify to NOISE.",
+    "detected_at": "2026-07-09T09:14:00Z",
+    "confidence": 0.68,
+    "expected_verdict": "NOISE"
+  },
+  {
+    "signal_id": "sig_maybe_01",
+    "type": "keyword_mention",
+    "family": "social",
+    "person": {
+      "full_name": "PLACEHOLDER real person",
+      "linkedin_url": "",
+      "new_title": "Head of Sales",
+      "new_company": "PLACEHOLDER real company"
+    },
+    "org": { "name": "PLACEHOLDER real company", "domain": "" },
+    "context": "Real person, real role, but only one weak signal and no corroboration. Should verify to NEEDS A SECOND SIGNAL.",
+    "detected_at": "2026-07-09T09:16:00Z",
+    "confidence": 0.55,
+    "expected_verdict": "NEEDS_SECOND_SIGNAL"
+  }
+]
