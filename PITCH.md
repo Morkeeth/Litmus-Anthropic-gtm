@@ -4,6 +4,12 @@ Rehearse this, not the code. Target: 90 seconds, walk-up-and-say-it easy. Four b
 
 ---
 
+## Optional cold open (10s, if the room is warm)
+
+> "Nadia is an SDR. Every morning her tool drops forty hot accounts in her queue. Last Monday she spent an hour writing to a VP who'd already left the company. Half her list is dead and she's stopped trusting any of it. This is for Nadia."
+
+Then go straight into problem.
+
 ## The 90-second script
 
 **Problem (15s).**
