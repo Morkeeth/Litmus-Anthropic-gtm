@@ -145,6 +145,34 @@ export async function runFromContacts(
   return scoreAndRank(inputs, { clientContext: ctx, topN });
 }
 
+// Flow B: Sillage intent detections. Pull signals -> get_lead per detection -> score (with real intent).
+// Optionally FullEnrich-enrich the top leads for email/phone. Needs a Sillage key; enrich needs FullEnrich.
+export async function runFromSillage(ctx: ClientContext, topN = 7): Promise<ScoredSignal[]> {
+  const { listSignals, getLead } = await import("../src/sillage");
+  const { data } = await listSignals({ page_size: 50 });
+  const inputs: ScoreInput[] = [];
+  for (const det of data) {
+    const lead = det.lead_id ? await getLead(det.lead_id).catch(() => null) : null;
+    const l = lead?.data ?? lead ?? {};
+    const signal: Signal = {
+      signal_id: `sil_${det.id}`,
+      agent: (det.agent_type ?? "keyword_detection") as any,
+      type: det.signal_type ?? det.agent_type ?? "signal",
+      category: "social",
+      account: { name: l.company?.name ?? det.account_name ?? "", domain: l.company?.domain, icp_match: true },
+      contact: { full_name: [l.first_name, l.last_name].filter(Boolean).join(" ") || l.headline || "", role: l.position, linkedin_url: l.linkedin_url },
+      summary: det.summary ?? det.text ?? `${det.signal_type ?? "signal"} on ${l.company?.name ?? "account"}`,
+      detected_at: det.detected_at ?? det.created_at ?? new Date().toISOString(),
+      raw: det,
+    };
+    const enriched: EnrichedContact | undefined = lead
+      ? { full_name: signal.contact.full_name, title: l.position, is_current_role: true, company: { name: l.company?.name, domain: l.company?.domain }, linkedin_url: l.linkedin_url }
+      : undefined;
+    inputs.push({ signal, enriched });
+  }
+  return scoreAndRank(inputs, { clientContext: ctx, topN });
+}
+
 // Flow D: a list of emails (webinar, export). FullEnrich reverse-lookup -> full profile -> score.
 // Showcases FullEnrich's reverse-email feature. Needs a FullEnrich key.
 export async function runFromEmails(ctx: ClientContext, emails: string[], topN = 7): Promise<ScoredSignal[]> {

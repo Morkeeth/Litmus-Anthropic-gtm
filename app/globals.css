@@ -65,8 +65,12 @@ a:hover { color: var(--muted); }
 }
 .chip .cn { font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip .ct { font-family: var(--font-mono); font-size: 10px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chip.dim { opacity: 0.06; transform: scale(0.9); }
-.chip.pick { border-color: var(--hot); box-shadow: 0 0 0 1px var(--hot), 0 4px 14px -4px color-mix(in srgb, var(--hot) 50%, transparent); transform: scale(1.04); }
+.chip.dim { opacity: 0.05; transform: scale(0.88); filter: blur(0.5px); }
+.chip.pick { border-color: var(--hot); transform: scale(1.06); z-index: 2; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--hot), 0 3px 12px -4px color-mix(in srgb, var(--hot) 45%, transparent); }
+  50% { box-shadow: 0 0 0 1px var(--hot), 0 6px 24px -2px color-mix(in srgb, var(--hot) 60%, transparent); }
+}
 
 /* Prospect entry */
 .entry { padding: 22px; border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 0; display: grid; grid-template-columns: 84px 1fr; gap: 18px; background: var(--bg); animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }

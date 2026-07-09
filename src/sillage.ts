@@ -46,9 +46,11 @@ export async function listTools(): Promise<any> {
 
 // ---------- Read ----------
 export const getSetupState = () => callTool("sillage_v2_get_setup_state");
-export const listSignals = (args: { agent?: string; cursor?: string } = {}) =>
+export const getPersona = () => callTool<any>("sillage_v2_get_persona");
+export const listSignals = (args: { page_size?: number; agent_id?: number; cursor?: string } = {}) =>
   callTool<{ data: any[]; meta: { next_cursor: string | null; has_more: boolean } }>("sillage_v2_list_signals", args);
-export const getSignal = (id: string) => callTool("sillage_v2_get_signal", { id });
+export const getSignal = (id: number) => callTool("sillage_v2_get_signal", { id });
+export const getLead = (lead_id: number) => callTool<any>("sillage_v2_get_lead", { lead_id });
 export const getCompanyMapping = (args: Record<string, unknown>) => callTool("sillage_v2_get_company_mapping", args);
 export const getContents = (args: Record<string, unknown> = {}) => callTool("sillage_v2_get_contents", args);
 

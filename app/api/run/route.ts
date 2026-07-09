@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { runIcpWorkflow, runFromContacts, runFromEmails } from "../../../lib/pipeline";
+import { runIcpWorkflow, runFromContacts, runFromEmails, runFromSillage } from "../../../lib/pipeline";
+import { slackSink } from "../../../src/sinks";
 import type { ClientContext } from "../../../src/types";
 
-// LIVE workflow. Source-optional:
-//   { clientContext, contacts:[...] }  -> Flow C: score a CRM/CSV list (no FullEnrich search, no Sillage)
-//   { clientContext, emails:[...] }    -> Flow D: FullEnrich reverse-email lookup -> score
-//   { clientContext }                  -> Flow A: FullEnrich people/search by ICP -> score
+// LIVE workflow. Source + destination are config-driven:
+//   contacts[] -> CRM/CSV (no FullEnrich/Sillage)   emails[] -> reverse-email
+//   source:"sillage" -> Sillage intent detections   default -> FullEnrich ICP search
+// destination:"Slack" -> also push the brief to the Slack sink.
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -19,20 +20,32 @@ export async function POST(req: Request) {
       topN?: number;
       contacts?: any[];
       emails?: string[];
+      source?: "sillage" | "fullenrich";
+      destination?: string;
     };
-    const { clientContext, topN = 7, contacts, emails } = body;
+    const { clientContext, topN = 5, contacts, emails, source, destination } = body;
 
     let prospects;
     if (contacts?.length) {
-      prospects = await runFromContacts(clientContext, contacts, topN); // no FullEnrich/Sillage needed
+      prospects = await runFromContacts(clientContext, contacts, topN);
     } else if (emails?.length) {
       if (!process.env.FULLENRICH_API_KEY) return NextResponse.json({ error: "reverse-email needs FULLENRICH_API_KEY" }, { status: 400 });
       prospects = await runFromEmails(clientContext, emails, topN);
+    } else if (source === "sillage") {
+      if (!process.env.SILLAGE_API_KEY) return NextResponse.json({ error: "Sillage source needs SILLAGE_API_KEY" }, { status: 400 });
+      prospects = await runFromSillage(clientContext, topN);
     } else {
       if (!process.env.FULLENRICH_API_KEY) return NextResponse.json({ error: "ICP search needs FULLENRICH_API_KEY (or pass contacts[])" }, { status: 400 });
       prospects = await runIcpWorkflow(clientContext, topN);
     }
-    return NextResponse.json({ prospects, source: "live", scored_at: new Date().toISOString() });
+
+    // Deliver to the chosen destination (dashboard is the default — the response IS the delivery).
+    let delivered = "dashboard";
+    if (destination === "Slack" && process.env.SLACK_WEBHOOK_URL) {
+      try { await slackSink.push(prospects); delivered = "slack"; } catch { /* non-fatal */ }
+    }
+
+    return NextResponse.json({ prospects, source: "live", delivered, scored_at: new Date().toISOString() });
   } catch (e: any) {
     return NextResponse.json({ error: String(e?.message ?? e) }, { status: 500 });
   }
