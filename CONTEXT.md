@@ -44,8 +44,11 @@ Score = `100 × real × icp_fit × (0.6 + 0.25·urgent + 0.15·warm)`. Sonnet fo
 - [ ] HubSpot output sink (account now available) — stretch.
 - [ ] Slack sink live (Block Kit) when a webhook is added.
 
-## Roadmap (post-hackathon)
-- **Knowledge base / RAG over seller collateral** (Jonathan's pitch, Jul 9): retrieve the seller's case studies, battlecards, winning emails per prospect to ground scoring + drafts. Real depth lever + moat. NOT for the hackathon (scope). Cheap first step: a "paste your docs" context field before committing to a vector DB — big context windows may beat retrieval for a single seller's corpus.
+## Roadmap (post-hackathon / stretch)
+- **Knowledge base / RAG over seller collateral** (Jonathan's pitch, Jul 9): retrieve the seller's case studies, battlecards, winning emails per prospect to ground scoring + drafts. Real depth lever + moat. NOT for the hackathon (scope). Cheap first step: a "paste your docs" context field before committing to a vector DB.
+- **Voice channel (fun bonus demo)**: Grok voice agent builder (x.ai/voice) or Gradium (gradium.ai). Track 1 lists *phone* as a channel — an AI voice briefing of the day's top 5, or a voice call to a prospect, is a memorable demo + "Most Creative" / "Best use of Gradium" side-prize bait. Stretch only, never on the critical path.
+- **Real Sillage intent**: keyword agent found 0 detections. Try interaction agents (competitor/customer/champion) for LinkedIn-engagement signals.
+- **Persist the ledger + feedback** (KV/Supabase) so dedup + learning survive serverless cold starts.
 
 ## Rules
 Trunk-based, commit every ~20-30 min, push immediately, `main` always demoable. See `WORKFLOW.md`. Keys: `.env` from `.env.example` (Anthropic/FullEnrich/Sillage on Vercel; Unipile local only).
