@@ -35,6 +35,55 @@ export function normalizeSillageSignal(raw: any): Signal {
   };
 }
 
+// ---------- Sillage live detection (+ lead) -> Signal ----------
+// Field paths verified against the real MCP payload Jul 9 (captured: data/sillage-samples.json).
+// A detection is { id, signal_type, data: <typed per signal_type>, detected_at, signal_date,
+// lead_id, company_id, agent_id, source_url, author, excerpt } — the intent evidence lives in
+// `data` and MUST survive into the summary or the scorer never sees the why-now.
+const SILLAGE_AGENT_MAP: Record<string, Signal["agent"]> = {
+  recentlyPromoted: "job_updates",
+  newPosition: "job_updates",
+  jobChange: "job_updates",
+  keyword: "keyword_detection",
+  keywordMention: "keyword_detection",
+  competitor: "competitor_activity",
+  contentEngagement: "content_engagement",
+};
+
+function sillageSummary(det: any, companyName: string): string {
+  const d = det?.data ?? {};
+  if (det.signal_type === "recentlyPromoted" || det.signal_type === "newPosition") {
+    const prev = d.previous_position, next = d.new_position;
+    const from = prev ? `${prev.role} at ${prev.company_name}` : "previous role";
+    const to = next ? `${next.role} at ${next.company_name}` : "new role";
+    return `Promoted/changed role: ${from} -> ${to}${next?.start_date ? ` (started ${next.start_date})` : ""}`;
+  }
+  if (det.excerpt) return `${det.signal_type}: ${det.excerpt}`;
+  return `${det.signal_type} at ${companyName}${Object.keys(d).length ? ` — ${JSON.stringify(d)}` : ""}`;
+}
+
+export function normalizeSillageDetection(det: any, lead?: any): Signal {
+  const l = lead?.data ?? lead ?? {};
+  const company = l.company?.name ?? "";
+  return {
+    signal_id: `sil_${det.id}`,
+    agent: SILLAGE_AGENT_MAP[det.signal_type] ?? "account_based_signals",
+    type: det.signal_type ?? "signal",
+    category: det.source_url ? "social" : "web",
+    account: { name: company, domain: l.company?.domain ?? undefined, icp_match: true },
+    contact: {
+      full_name: [l.first_name, l.last_name].filter(Boolean).join(" ") || l.linkedin_headline || "",
+      role: l.position ?? undefined,
+      linkedin_url: l.linkedin_url ?? undefined,
+      previous_company: det?.data?.previous_position?.company_name,
+    },
+    summary: sillageSummary(det, company),
+    // urgency scores off the TRIGGER date, not when Sillage crawled it
+    detected_at: det.signal_date ?? det.detected_at ?? new Date().toISOString(),
+    raw: det,
+  };
+}
+
 // ---------- FullEnrich people/lookup -> EnrichedContact (truth check) ----------
 export function normalizeFullEnrichProfile(raw: any): EnrichedContact {
   const p = raw?.people?.[0] ?? raw;

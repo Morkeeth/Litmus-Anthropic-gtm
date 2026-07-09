@@ -1,0 +1,194 @@
+{
+  "captured_at": "2026-07-09T11:01:12.985Z",
+  "list_signals": {
+    "data": [
+      {
+        "id": 1823336,
+        "signal_type": "recentlyPromoted",
+        "data": {
+          "previous_position": {
+            "role": "VP of Sales",
+            "company_name": "Ramp"
+          },
+          "new_position": {
+            "role": "SVP of Sales",
+            "company_name": "Ramp",
+            "start_date": "2026-06-01"
+          }
+        },
+        "detected_at": "2026-07-09T10:24:04.819Z",
+        "signal_date": "2026-06-01T00:00:00.000Z",
+        "lead_id": 1013454,
+        "company_id": 129962,
+        "agent_id": 2358,
+        "source_url": null,
+        "author": null,
+        "excerpt": null
+      },
+      {
+        "id": 1823335,
+        "signal_type": "recentlyPromoted",
+        "data": {
+          "previous_position": {
+            "role": "Senior Director, Head of Commercial Sales, Inside Sales & Growth Account Management ",
+            "company_name": "Ramp"
+          },
+          "new_position": {
+            "role": "VP of Sales",
+            "company_name": "Ramp",
+            "start_date": "2026-06-01"
+          }
+        },
+        "detected_at": "2026-07-09T10:24:04.819Z",
+        "signal_date": "2026-06-01T00:00:00.000Z",
+        "lead_id": 1013453,
+        "company_id": 129962,
+        "agent_id": 2358,
+        "source_url": null,
+        "author": null,
+        "excerpt": null
+      }
+    ],
+    "meta": {
+      "next_cursor": null,
+      "has_more": false
+    }
+  },
+  "get_signal": {
+    "data": {
+      "id": 1823336,
+      "signal_type": "recentlyPromoted",
+      "data": {
+        "previous_position": {
+          "role": "VP of Sales",
+          "company_name": "Ramp"
+        },
+        "new_position": {
+          "role": "SVP of Sales",
+          "company_name": "Ramp",
+          "start_date": "2026-06-01"
+        }
+      },
+      "detected_at": "2026-07-09T10:24:04.819Z",
+      "signal_date": "2026-06-01T00:00:00.000Z",
+      "lead_id": 1013454,
+      "company_id": 129962,
+      "agent_id": 2358,
+      "source_url": null,
+      "author": null,
+      "excerpt": null
+    }
+  },
+  "get_lead": {
+    "data": {
+      "id": 1013454,
+      "first_name": "Max",
+      "last_name": "Freeman",
+      "linkedin_url": "https://linkedin.com/in/maxwellfreeman",
+      "linkedin_handle": "maxwellfreeman",
+      "linkedin_headline": "SVP of Sales @ Ramp (I’m hiring - ramp.com/careers)",
+      "avatar_url": "https://media.licdn.com/dms/image/v2/C4D03AQEdWwQ2FCFXwA/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1611103500410?e=1785369600&v=beta&t=lvGqqFAOnjeWggzUPf3un02pGkQRQIwkJ63SXwQBhXI",
+      "position": "SVP of Sales @ Ramp (I’m hiring - ramp.com/careers)",
+      "location": "New York, New York, United States",
+      "geo": {
+        "city": "New York",
+        "region": "New York",
+        "country": "United States",
+        "country_code": "US"
+      },
+      "company": {
+        "id": 129962,
+        "name": "Ramp",
+        "domain": "ramp.com",
+        "linkedin_url": "https://linkedin.com/company/ramp",
+        "linkedin_handle": "ramp",
+        "activity_summary": "Ramp is an all-in-one financial operations platform designed to save businesses time and money. Combining corporate cards, expense management, bill payments, accounting automation, procurement, travel, treasury, and more, Ramp empowers finance teams to do their best work. \n\nMore than 70,000 companies, from family-owned farms to space startups, have saved $10B and 27.5M hours with Ramp since its founding in 2019.\n\nInvestors include Founders Fund, Thrive Capital, Khosla Ventures, Sequoia, Greylock, Stripe, Goldman Sachs, Coatue, and Redpoint, as well as over 100 angel investors who were founders or executives of leading companies. The Ramp team comprises talented leaders from leading financial services and fintech companies—Stripe, Affirm, Goldman Sachs, American Express, Mastercard, Visa, Capital One—as well as technology companies such as Meta, Uber, Netflix, Twitter, Dropbox, and Instacart.\n\nRamp has been named to Fast Company's Most Innovative Companies list and LinkedIn's Top U.S. Startups for over 3 years, as well as the Forbes Cloud 100, CNBC Disruptor 50, and TIME Magazine's 100 Most Influential Companies.\n\nVisit our website for a full list of US state licenses & disclosures: https://ramp.com/legal/state-disclosures",
+        "employee_range": "1001-5000",
+        "location": "New York"
+      },
+      "experiences": [
+        {
+          "title": "SVP of Sales",
+          "company_name": "Ramp",
+          "company_linkedin_url": "https://www.linkedin.com/company/ramp/",
+          "location": "New York, NY",
+          "start_date": "2026-06-01T00:00:00.000Z",
+          "end_date": null,
+          "is_current": true
+        },
+        {
+          "title": "VP of Sales",
+          "company_name": "Ramp",
+          "company_linkedin_url": "https://www.linkedin.com/company/ramp/",
+          "location": "New York, New York, United States",
+          "start_date": "2024-09-01T00:00:00.000Z",
+          "end_date": "2026-06-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Head of Sales (Large Accounts, Mid-Market, Inside Sales, and Sales Development)",
+          "company_name": "Ramp",
+          "company_linkedin_url": "https://www.linkedin.com/company/ramp/",
+          "location": "New York, New York, United States",
+          "start_date": "2024-04-01T00:00:00.000Z",
+          "end_date": "2024-09-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Head of MidMarket Sales",
+          "company_name": "Ramp",
+          "company_linkedin_url": "https://www.linkedin.com/company/ramp/",
+          "location": null,
+          "start_date": "2023-08-01T00:00:00.000Z",
+          "end_date": "2024-04-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Head of New Business Development ",
+          "company_name": "Ramp",
+          "company_linkedin_url": "https://www.linkedin.com/company/ramp/",
+          "location": null,
+          "start_date": "2022-06-01T00:00:00.000Z",
+          "end_date": "2023-08-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Sales Development Representative",
+          "company_name": "Ramp",
+          "company_linkedin_url": "https://www.linkedin.com/company/ramp/",
+          "location": null,
+          "start_date": "2020-04-01T00:00:00.000Z",
+          "end_date": "2022-06-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Account Executive",
+          "company_name": "Namely",
+          "company_linkedin_url": "https://www.linkedin.com/company/namely/",
+          "location": "Greater New York City Area",
+          "start_date": "2019-04-01T00:00:00.000Z",
+          "end_date": "2020-04-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Sales Development",
+          "company_name": "Namely",
+          "company_linkedin_url": "https://www.linkedin.com/company/namely/",
+          "location": "New York, New York",
+          "start_date": "2018-04-01T00:00:00.000Z",
+          "end_date": "2019-04-01T00:00:00.000Z",
+          "is_current": false
+        },
+        {
+          "title": "Analyst (Graduate Talent Program)",
+          "company_name": "UBS",
+          "company_linkedin_url": "https://www.linkedin.com/company/ubs/",
+          "location": "New York, New York ",
+          "start_date": "2017-01-01T00:00:00.000Z",
+          "end_date": "2018-01-01T00:00:00.000Z",
+          "is_current": false
+        }
+      ]
+    }
+  }
+}

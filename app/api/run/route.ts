@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runIcpWorkflow, runFromContacts, runFromEmails, runFromSillage, runFromHubspot } from "../../../lib/pipeline";
+import { runSillageAgent } from "../../../lib/agent-loop";
 import { slackSink, hubspotSink } from "../../../src/sinks";
 import type { ClientContext } from "../../../src/types";
 
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
       topN?: number;
       contacts?: any[];
       emails?: string[];
-      source?: "sillage" | "hubspot" | "fullenrich";
+      source?: "sillage" | "sillage-agent" | "hubspot" | "fullenrich";
       destination?: string;
       targetCompanies?: string[];
     };
@@ -32,6 +33,11 @@ export async function POST(req: Request) {
     } else if (emails?.length) {
       if (!process.env.FULLENRICH_API_KEY) return NextResponse.json({ error: "reverse-email needs FULLENRICH_API_KEY" }, { status: 400 });
       prospects = await runFromEmails(clientContext, emails, topN);
+    } else if (source === "sillage-agent") {
+      // Agent loop: model triages the batch, selectively verifies `real` via FullEnrich, emits ranked.
+      if (!process.env.SILLAGE_API_KEY) return NextResponse.json({ error: "agent loop needs SILLAGE_API_KEY" }, { status: 400 });
+      if (!process.env.FULLENRICH_API_KEY) return NextResponse.json({ error: "agent loop needs FULLENRICH_API_KEY (verify_person)" }, { status: 400 });
+      prospects = await runSillageAgent(clientContext, topN);
     } else if (source === "sillage") {
       if (!process.env.SILLAGE_API_KEY) return NextResponse.json({ error: "Sillage source needs SILLAGE_API_KEY" }, { status: 400 });
       prospects = await runFromSillage(clientContext, topN);
