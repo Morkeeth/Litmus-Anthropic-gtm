@@ -17,6 +17,16 @@ type Prospect = {
 };
 
 const scoreClass = (s: number) => (s >= 70 ? "hot" : s >= 40 ? "mid" : "dead");
+
+// The litmus reading — a lead is ACID (reactive, act now) or BASE (inert, skip). Score → pH.
+function litmus(p: Prospect) {
+  const real = p.factors?.find((f) => f.key === "real")?.value ?? 0;
+  if (real < 0.3) return { label: "BASE", ph: 13, cls: "base", note: "inert · skip" };
+  if (p.score >= 85) return { label: "STRONG ACID", ph: 1, cls: "acid", note: "react now" };
+  if (p.score >= 70) return { label: "ACID", ph: 3, cls: "acid", note: "reactive · act now" };
+  if (p.score >= 45) return { label: "NEUTRAL", ph: 7, cls: "neutral", note: "watch" };
+  return { label: "WEAK BASE", ph: 10, cls: "base", note: "low priority" };
+}
 const pips = (v: number) => "●●●●".slice(0, Math.round(v * 4)) + "○○○○".slice(0, 4 - Math.round(v * 4));
 const today = () => new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
@@ -198,7 +208,10 @@ export default function Dashboard() {
             const tier = !focusId && idx < 3 ? "prime" : p.score >= 60 ? "hot" : null;
             return (
               <article className="entry" key={p.signal_id}>
-                <div className={`score ${scoreClass(p.score)}`}>{p.score}<span className="of">/ 100</span></div>
+                <div className="score-col">
+                  <div className={`score ${scoreClass(p.score)}`}>{p.score}<span className="of">/ 100</span></div>
+                  {(() => { const L = litmus(p); return <div className={`litmus ${L.cls}`} title={`pH ${L.ph} · ${L.note}`}>🧪 {L.label} · pH{L.ph}</div>; })()}
+                </div>
                 <div>
                   <div className="who">{tier && <span className={`tier ${tier}`}>{tier}</span>}{e?.full_name ?? "Unknown"} · {e?.title ?? ""}{e?.company?.name ? ` · ${e.company.name}` : ""}</div>
                   <h2 className="reason">{p.rank_reason}</h2>

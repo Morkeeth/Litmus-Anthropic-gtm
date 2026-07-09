@@ -26,12 +26,13 @@ const C = {
   cyan: e("\x1b[36m"), gray: e("\x1b[90m"), mag: e("\x1b[35m"), white: e("\x1b[97m"),
 };
 const paint = (s: number) => (s >= 70 ? C.green : s >= 40 ? C.yellow : C.red);
+// the litmus reading — acid (react now) vs base (inert)
 const verdict = (p: any) => {
   const real = p.factors?.find((f: any) => f.key === "real")?.value ?? 0;
-  if (real < 0.3) return `${C.red}✕ NOISE${C.reset}`;
-  if (p.score >= 70) return `${C.green}▲ HOT${C.reset}`;
-  if (p.score >= 40) return `${C.yellow}◆ WATCH${C.reset}`;
-  return `${C.gray}· LOW${C.reset}`;
+  if (real < 0.3) return `${C.cyan}🧪 BASE${C.reset}`;
+  if (p.score >= 70) return `${C.red}🧪 ACID${C.reset}`;
+  if (p.score >= 45) return `${C.yellow}🧪 NEUTRAL${C.reset}`;
+  return `${C.cyan}🧪 WEAK BASE${C.reset}`;
 };
 
 function banner() {
