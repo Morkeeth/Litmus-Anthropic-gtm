@@ -18,10 +18,11 @@
 // Every verdict cites the exact FullEnrich fields / relationship edge that drove it.
 //
 // Tools exposed to the agent (cap ~5 iterations to bound latency):
-//   search_company(nameOrDomain)      FullEnrich  (truth)
-//   search_people(company, role?)     FullEnrich  (truth)
-//   enrich_contact(person)            FullEnrich  (truth, poll wrapped inside)
+//   company_lookup / company_search   FullEnrich sync (truth)
+//   people_lookup / people_search     FullEnrich sync (truth — profiles only, no email/phone)
+//   enrich_contact(person)            FullEnrich async waterfall (email/phone; poll wrapped inside)
 //   lookup_relationship(person, co?)  relationship.ts (warmth, seeded)
+//   web_search                        Anthropic server tool — independent corroboration (second signal)
 //
 // TODO Thursday: implement with @anthropic-ai/sdk, tool-use, structured output.
 

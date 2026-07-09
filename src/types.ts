@@ -4,22 +4,37 @@ export type Truth = "REAL" | "NOISE" | "UNPROVEN";
 export type Warmth = "WARM" | "COLD";
 export type Action = "WARM_INTRO" | "VERIFY_COLD" | "DROP" | "WATCH";
 
+// Signal shape aligned with Sillage's public vocabulary (their 8 signal agents,
+// three-layer source taxonomy). No public schema exists, so this mock matches their
+// language; swap-in against the real feed means renaming fields at one boundary.
+export type SignalAgent =
+  | "competitor_activity"
+  | "job_updates"
+  | "content_engagement"
+  | "influencer_engagement"
+  | "champion_tracking"
+  | "keyword_detection"
+  | "job_posting_insights"
+  | "account_based_signals";
+
 export interface Signal {
   signal_id: string;
-  // job_change | intent_surge | keyword_mention | champion_move | funding | hiring
+  agent: SignalAgent;
+  // e.g. job_change | champion_new_role | competitor_engagement | hiring_wave | funding_round | keyword_mention
   type: string;
-  family: "first_party" | "social" | "web";
-  person: {
+  category: "first_party" | "social" | "web";
+  account: { name: string; domain?: string; icp_match?: boolean };
+  contact: {
     full_name: string;
+    role?: string;
     linkedin_url?: string;
-    new_title?: string;
-    new_company?: string;
-    // champion_move only: where we knew them from
+    // champion_tracking only: where we knew them from
     previous_company?: string;
   };
-  org: { name: string; domain?: string };
-  context: string;
+  source?: { channel: string; url?: string };
+  summary: string;
   detected_at: string;
+  tier?: number;
   confidence: number;
   expected_verdict?: string; // demo aid only
 }

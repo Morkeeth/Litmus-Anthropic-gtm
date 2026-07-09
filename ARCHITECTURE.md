@@ -56,7 +56,8 @@ The NOISE gotcha is the round-1 hero. The REAL+WARM champion beat is the round-2
                         │   • search_people    ───────┤    verified email/phone/role
                         │   • enrich_contact   ───────┘
                         │   • lookup_relationship ────┼──▶ Relationship DB (warmth axis)
-                        │   • find_second_signal      │    seeded: Sillage champ history
+                        │   • web_search (Anthropic   │    seeded: Sillage champ history
+                        │     server tool, corrobor.) │
                         └─────────────────────────────┘    + team network CSV
                                      │
                                      ▼
@@ -100,7 +101,7 @@ interface LitmusResult {
 
 ## Sponsor fit (all three load-bearing)
 
-- **Sillage** = signal source, *including champion moves*. We consume, verify, route. We make their signals provably actionable. Never "your signals are unreliable" — always "we make your signals provably actionable."
+- **Sillage** = signal source, *including champion moves*. We consume, verify, route. We make their signals provably actionable.
 - **FullEnrich** = the truth substrate. Every REAL/NOISE call cites a FullEnrich field.
 - **Claude (Fable)** = the reasoning engine running the two-axis verdict loop.
 

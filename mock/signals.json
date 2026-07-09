@@ -1,66 +1,74 @@
 [
   {
     "signal_id": "sig_real_cold_01",
+    "agent": "job_updates",
     "type": "job_change",
-    "family": "social",
-    "person": {
+    "category": "social",
+    "account": { "name": "PLACEHOLDER real company", "domain": "", "icp_match": true },
+    "contact": {
       "full_name": "PLACEHOLDER real VP",
-      "linkedin_url": "",
-      "new_title": "VP Sales",
-      "new_company": "PLACEHOLDER real company"
+      "role": "VP Sales",
+      "linkedin_url": ""
     },
-    "org": { "name": "PLACEHOLDER real company", "domain": "" },
-    "context": "New VP at a target account. Person verifiable, role current, corroborated, no known path in. Expect REAL + COLD -> VERIFY_COLD.",
+    "source": { "channel": "linkedin" },
+    "summary": "New VP Sales at a target account, inside the 30-90 day new-role buying window.",
     "detected_at": "2026-07-09T09:12:00Z",
+    "tier": 1,
     "confidence": 0.72,
     "expected_verdict": "REAL+COLD"
   },
   {
     "signal_id": "sig_noise_01",
+    "agent": "account_based_signals",
     "type": "intent_surge",
-    "family": "web",
-    "person": {
+    "category": "web",
+    "account": { "name": "PLACEHOLDER company they already left", "domain": "", "icp_match": true },
+    "contact": {
       "full_name": "PLACEHOLDER stale contact",
-      "linkedin_url": "",
-      "new_title": "Head of Growth",
-      "new_company": "PLACEHOLDER company they already left"
+      "role": "Head of Growth",
+      "linkedin_url": ""
     },
-    "org": { "name": "PLACEHOLDER company they already left", "domain": "" },
-    "context": "THE GOTCHA. Signal claims this person is the buyer, but they left months ago. Expect NOISE -> DROP, with the proof. Round-1 hero card.",
+    "source": { "channel": "press" },
+    "summary": "Account surging on category intent; this person flagged as the buyer. THE GOTCHA: they left months ago. Expect NOISE -> DROP with proof.",
     "detected_at": "2026-07-09T09:14:00Z",
+    "tier": 1,
     "confidence": 0.68,
     "expected_verdict": "NOISE"
   },
   {
     "signal_id": "sig_champion_01",
-    "type": "champion_move",
-    "family": "social",
-    "person": {
+    "agent": "champion_tracking",
+    "type": "champion_new_role",
+    "category": "first_party",
+    "account": { "name": "PLACEHOLDER real company", "domain": "", "icp_match": true },
+    "contact": {
       "full_name": "PLACEHOLDER past champion",
+      "role": "VP Engineering",
       "linkedin_url": "",
-      "new_title": "VP Engineering",
-      "new_company": "PLACEHOLDER real company",
       "previous_company": "PLACEHOLDER where they championed us"
     },
-    "org": { "name": "PLACEHOLDER real company", "domain": "" },
-    "context": "Sillage-style champion move: past champion just landed in a buying seat. Verify they're really there (FullEnrich), find the edge (relationship DB). Expect REAL + WARM -> WARM_INTRO via the edge. Round-2 depth card.",
+    "source": { "channel": "linkedin" },
+    "summary": "Past champion just landed in a buying seat at an ICP account. Verify current role, find the relationship edge. Expect REAL+WARM -> WARM_INTRO.",
     "detected_at": "2026-07-09T09:15:00Z",
+    "tier": 1,
     "confidence": 0.81,
     "expected_verdict": "REAL+WARM"
   },
   {
     "signal_id": "sig_unproven_01",
+    "agent": "keyword_detection",
     "type": "keyword_mention",
-    "family": "social",
-    "person": {
+    "category": "social",
+    "account": { "name": "PLACEHOLDER real company", "domain": "", "icp_match": false },
+    "contact": {
       "full_name": "PLACEHOLDER real person",
-      "linkedin_url": "",
-      "new_title": "Head of Sales",
-      "new_company": "PLACEHOLDER real company"
+      "role": "Head of Sales",
+      "linkedin_url": ""
     },
-    "org": { "name": "PLACEHOLDER real company", "domain": "" },
-    "context": "Real person, real role, one weak signal, no corroboration. Expect UNPROVEN -> WATCH.",
+    "source": { "channel": "linkedin" },
+    "summary": "One public post mentioning the category. Real person, real role, no corroboration. Expect UNPROVEN -> WATCH.",
     "detected_at": "2026-07-09T09:16:00Z",
+    "tier": 2,
     "confidence": 0.55,
     "expected_verdict": "UNPROVEN"
   }
