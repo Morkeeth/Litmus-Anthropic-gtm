@@ -143,6 +143,16 @@ export default function Dashboard() {
 
   function openEval(p: Prospect) { setEvalFor(p); setEvalLead({ reason: "" }); setEvalMsg({ reason: "" }); }
 
+  async function deliverBrief(destination: string) {
+    if (destination === "Telegram" && !conn.unipile) { alert("Telegram delivery is live on the demo machine only."); return; }
+    if (destination === "HubSpot" && !conn.hubspot) { alert("HubSpot delivery is live on the demo machine only."); return; }
+    const top = prospects.filter((p) => state[p.signal_id] !== "killed").slice(0, 5);
+    const res = await fetch("/api/deliver", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ destination, prospects: top }) }).then((r) => r.json()).catch(() => ({ error: "network" }));
+    if (res.error) { alert(`Deliver → ${destination}: ${res.error}`); return; }
+    alert(`✅ Brief delivered to ${destination} (${res.count} leads)`);
+  }
+
   async function sendVia(p: Prospect, channel: "email" | "telegram") {
     if (!conn.unipile) { alert(`${channel === "email" ? "Email" : "Telegram"} send is live on the demo machine only — send keys are kept off this public deployment for safety. View-only here.`); return; }
     const draft = p.drafts?.find((d) => d.channel === channel);
@@ -221,6 +231,14 @@ export default function Dashboard() {
               : <>Top {live.length} of the day{brand ? ` · for “${brand}${brand.length >= 60 ? "…" : ""}”` : ""}{source === "live" ? " · live" : ""}
                 {" · "}<a onClick={() => setPhase("cloud")} style={{ cursor: "pointer" }}>← the firehose</a></>}
             {" · "}<Link href="/onboarding">edit context</Link>
+          </div>
+
+          <div className="subhead" style={{ paddingTop: 0 }}>
+            deliver brief →
+            <a onClick={() => deliverBrief("Slack")}>Slack</a>
+            <a onClick={() => deliverBrief("Telegram")}>Telegram</a>
+            <a onClick={() => deliverBrief("HubSpot")}>HubSpot</a>
+            <span className="small">· or the CLI: <code>npm run cli -- brief</code></span>
           </div>
 
           {shown.map((p, idx) => {
