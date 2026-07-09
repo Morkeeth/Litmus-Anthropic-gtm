@@ -47,7 +47,7 @@ Forced structured JSON out. Loop capped ~5 tool calls. Demo reads the pre-warm c
 | 11:00–13:00 | Fable verify loop: tools wired (FullEnrich + relationship), **two-axis structured JSON verdict**, evidence chain, explicit per-axis rules. | Pierre + Oscar |
 | 13:00–13:30 | Lunch / integrate: loop runs real FullEnrich + relationship end-to-end on one signal. | all |
 | 13:30–15:00 | Curate 3–4 demo signals (REAL+COLD, NOISE gotcha, REAL+WARM champion, UNPROVEN). UI: 2×2 verdict cards + evidence. | Oscar + Desiree |
-| 15:00–16:00 | **Pre-warm cache built and wired.** Demo runs entirely from cache. Freeze round-1 cut first. | Pierre |
+| 15:00–16:00 | **Pre-warm cache built and wired.** Demo runs entirely from cache. Freeze round-1 cut first. MCP wrapper (~50 lines, same verify fn) if on schedule — first cut if hot. | Pierre |
 | 16:00–16:30 | Swap in live Sillage feed if we have a key, else polish the mock path. Wire the round-2 depth beat. | Pierre |
 | 16:30–17:30 | Freeze build. Cache everything. Rehearse round-1 (60s) x3 and round-2 depth x2. | all |
 

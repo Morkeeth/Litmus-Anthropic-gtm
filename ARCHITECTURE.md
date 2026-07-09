@@ -66,6 +66,16 @@ The NOISE gotcha is the round-1 hero. The REAL+WARM champion beat is the round-2
                           Pre-warm cache (disk) — demo reads cache, one live call held ready
 ```
 
+### Product surfaces (decided Jul 9): headless engine, three doors
+
+Litmus is a layer, not a destination — no "home screen". One `verify()` engine exposed through three thin surfaces, in build priority order:
+
+1. **HTTP API** (`POST /verify`) — ~20 lines over the engine. Any CRM/Slack/workflow tool consumes verdicts today.
+2. **Dashboard** — verdict cards + evidence chain, static page served by the same process. The human approval gate and the stage view. Never grows into "another tab".
+3. **MCP server** — the same `verify()` wrapped as an MCP tool (`@modelcontextprotocol/sdk`, stdio, ~50 lines). Any AI agent calls Litmus before acting on a lead. Ships in the 15:00 block; first thing cut if the day runs hot.
+
+One Node/TS process serves engine + API + dashboard. Localhost is the demo substrate (cache makes it wifi-proof); Railway/Fly optional for a public URL — not serverless, the enrich waterfall polls 30–90s.
+
 ### Components
 
 1. **Signal ingest.** Mock `mock/signals.json` from minute zero. Live Sillage is a swap-in, never a dependency. Champion-move signals are just another `type` in the same schema.
