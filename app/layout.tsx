@@ -11,7 +11,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "Litmus — the morning brief",
-  description: "The scoring layer for intent. Sillage firehose in, ranked prospects with drafts out.",
+  description: "The scoring layer for leads. Sillage firehose in, ranked prospects with drafts out.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

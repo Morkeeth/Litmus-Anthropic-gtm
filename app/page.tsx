@@ -7,7 +7,7 @@ export default function Home() {
         <div className="brand">
           Lit<em>mus</em>
         </div>
-        <div className="meta">the scoring layer for intent</div>
+        <div className="meta">the scoring layer for leads</div>
       </header>
 
       <p className="lede">
