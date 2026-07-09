@@ -18,14 +18,13 @@ type Prospect = {
 
 const scoreClass = (s: number) => (s >= 70 ? "hot" : s >= 40 ? "mid" : "dead");
 
-// The litmus reading — a lead is ACID (reactive, act now) or BASE (inert, skip). Score → pH.
+// The litmus reading — a lead is ACID (reactive, act now) or BASE (inert, skip). Score → pH,
+// monotonic: higher score = lower pH = more acidic = hotter.
 function litmus(p: Prospect) {
-  const real = p.factors?.find((f) => f.key === "real")?.value ?? 0;
-  if (real < 0.3) return { label: "BASE", ph: 13, cls: "base", note: "inert · skip" };
-  if (p.score >= 85) return { label: "STRONG ACID", ph: 1, cls: "acid", note: "react now" };
-  if (p.score >= 70) return { label: "ACID", ph: 3, cls: "acid", note: "reactive · act now" };
-  if (p.score >= 45) return { label: "NEUTRAL", ph: 7, cls: "neutral", note: "watch" };
-  return { label: "WEAK BASE", ph: 10, cls: "base", note: "low priority" };
+  const ph = Math.max(0, Math.min(14, Math.round(14 - (p.score / 100) * 14)));
+  if (p.score >= 65) return { label: "ACID", ph, cls: "acid", note: "reactive · act now" };
+  if (p.score >= 40) return { label: "NEUTRAL", ph, cls: "neutral", note: "watch" };
+  return { label: "BASE", ph, cls: "base", note: "inert · skip" };
 }
 const pips = (v: number) => "●●●●".slice(0, Math.round(v * 4)) + "○○○○".slice(0, 4 - Math.round(v * 4));
 const today = () => new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
@@ -66,6 +65,7 @@ export default function Dashboard() {
   const [stage, setStage] = useState(0);
   const [source, setSource] = useState<"mock" | "live">("mock");
   const [focusId, setFocusId] = useState<string | null>(null);
+  const [conn, setConn] = useState<Record<string, boolean>>({});
   const [evalFor, setEvalFor] = useState<Prospect | null>(null);
   const [evalLead, setEvalLead] = useState<{ verdict?: "up" | "down"; reason: string }>({ reason: "" });
   const [evalMsg, setEvalMsg] = useState<{ verdict?: "up" | "down"; reason: string }>({ reason: "" });
@@ -78,6 +78,7 @@ export default function Dashboard() {
     const f = new URLSearchParams(window.location.search).get("focus");
     if (f) { setFocusId(f); setPhase("brief"); }
     fetch("/api/prospects").then((r) => r.json()).then((d) => setProspects(d.prospects ?? []));
+    fetch("/api/connections").then((r) => r.json()).then(setConn).catch(() => {});
   }, []);
 
   // the 5 winners live inside the cloud so the filter visibly selects them
@@ -89,6 +90,11 @@ export default function Dashboard() {
     return merged;
   }, [prospects, filler]);
 
+  // Primary action: score LIVE (dynamic, context-dependent) when context exists; mock only as a fallback demo.
+  function runToday() {
+    const hasContext = !!localStorage.getItem("litmus_context");
+    if (hasContext) runLive(); else runBrief();
+  }
   function runBrief() {
     setPhase("filtering");
     FUNNEL.forEach((f, i) => {
@@ -138,6 +144,7 @@ export default function Dashboard() {
   function openEval(p: Prospect) { setEvalFor(p); setEvalLead({ reason: "" }); setEvalMsg({ reason: "" }); }
 
   async function sendVia(p: Prospect, channel: "email" | "telegram") {
+    if (!conn.unipile) { alert(`${channel === "email" ? "Email" : "Telegram"} send is live on the demo machine only — send keys are kept off this public deployment for safety. View-only here.`); return; }
     const draft = p.drafts?.find((d) => d.channel === channel);
     const res = await fetch("/api/send", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ channel, subject: draft?.subject, text: draft?.body ?? p.rank_reason }) }).then((r) => r.json()).catch(() => ({ error: "network" }));
@@ -187,10 +194,10 @@ export default function Dashboard() {
             Your CRM is a firehose. Sillage + FullEnrich verify and de-noise it; Litmus scores what's left against what you sell.
           </div>
           <div className="row" style={{ marginTop: 0, marginBottom: 8 }}>
-            <button className="primary" onClick={runBrief} disabled={phase === "filtering"}>
+            <button className="primary" onClick={runToday} disabled={phase === "filtering"}>
               {phase === "filtering" ? "Scoring…" : "Run today's brief →"}
             </button>
-            <button className="ghost" onClick={runLive} disabled={phase === "filtering"}>Run live ↻</button>
+            <button className="ghost" onClick={runBrief} disabled={phase === "filtering"}>Demo data</button>
             <Link href="/onboarding"><button className="ghost">Edit context</button></Link>
           </div>
           <div className="cloud-grid">

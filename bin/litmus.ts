@@ -28,11 +28,9 @@ const C = {
 const paint = (s: number) => (s >= 70 ? C.green : s >= 40 ? C.yellow : C.red);
 // the litmus reading — acid (react now) vs base (inert)
 const verdict = (p: any) => {
-  const real = p.factors?.find((f: any) => f.key === "real")?.value ?? 0;
-  if (real < 0.3) return `${C.cyan}🧪 BASE${C.reset}`;
-  if (p.score >= 70) return `${C.red}🧪 ACID${C.reset}`;
-  if (p.score >= 45) return `${C.yellow}🧪 NEUTRAL${C.reset}`;
-  return `${C.cyan}🧪 WEAK BASE${C.reset}`;
+  if (p.score >= 65) return `${C.red}🧪 ACID${C.reset}`;
+  if (p.score >= 40) return `${C.yellow}🧪 NEUTRAL${C.reset}`;
+  return `${C.cyan}🧪 BASE${C.reset}`;
 };
 
 function banner() {

@@ -37,6 +37,17 @@ export default function Onboarding() {
   const [conns, setConns] = useState<Record<string, { mode: string; connected: boolean }>>({});
   const [cfg, setCfg] = useState({ destination: "Dashboard", cadence: "Once a day", count: 5 });
   const [pulled, setPulled] = useState(false);
+  const [company, setCompany] = useState("");
+  const [drafting, setDrafting] = useState(false);
+
+  async function draftFromCompany() {
+    if (!company.trim()) return;
+    setDrafting(true);
+    const res = await fetch("/api/draft-context", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ company }) }).then((r) => r.json()).catch(() => ({ error: "network" }));
+    setDrafting(false);
+    if (res.error) { alert(`Couldn't draft: ${res.error}`); return; }
+    setCtx({ ...ctx, ...res.context });
+  }
 
   async function pullPersona() {
     const r = await fetch("/api/persona").then((x) => x.json()).catch(() => null);
@@ -49,6 +60,14 @@ export default function Onboarding() {
       const c = localStorage.getItem("litmus_context"); if (c) setCtx(JSON.parse(c));
       const g = localStorage.getItem("litmus_config"); if (g) { const p = JSON.parse(g); setConns(p.conns ?? {}); setCfg(p.cfg ?? cfg); }
     } catch {}
+    // Auto-detect sources already connected server-side (.env) — no re-pasting keys.
+    fetch("/api/connections").then((r) => r.json()).then((d) => {
+      setConns((prev) => {
+        const next = { ...prev };
+        for (const k of ["fullenrich", "sillage", "hubspot"]) if (d[k] && !next[k]?.connected) next[k] = { mode: "workspace", connected: true };
+        return next;
+      });
+    }).catch(() => {});
   }, []);
 
   function finish() {
@@ -65,16 +84,25 @@ export default function Onboarding() {
       </header>
 
       <div className="stepper">
-        {["Context", "Connect", "Output"].map((s, i) => (
+        {["Connect", "Context", "Output"].map((s, i) => (
           <span key={s} className={`step ${step === i + 1 ? "active" : step > i + 1 ? "done" : ""}`} onClick={() => setStep(i + 1)}>
             {i + 1} {s}
           </span>
         ))}
       </div>
 
-      {step === 1 && (
+      {step === 2 && (
         <>
           <p className="lede"><span className="drop">A</span> prospect is only good relative to what you sell. Set this once — every score and every draft is measured against it.</p>
+
+          <div className="autofill">
+            <div className="autofill-h">✨ Start from your company — Litmus researches it and drafts everything below. You just tweak.</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input placeholder="your company or website — e.g. ramp.com" value={company} onChange={(e) => setCompany(e.target.value)} onKeyDown={(e) => e.key === "Enter" && draftFromCompany()} />
+              <button className="primary" onClick={draftFromCompany} disabled={drafting}>{drafting ? "researching…" : "Generate"}</button>
+            </div>
+          </div>
+
           {LAYERS.map((L) => (
             <div className="layer" key={L.title}>
               <div className="layer-h">{L.title}<span className="layer-note">{L.note}</span></div>
@@ -94,36 +122,43 @@ export default function Onboarding() {
               ))}
             </div>
           ))}
-          <div className="row"><button className="primary" onClick={() => setStep(2)}>Next: connect your data →</button></div>
+          <div className="row"><button className="ghost" onClick={() => setStep(1)}>← Back</button><button className="primary" onClick={() => setStep(3)}>Next: choose your output →</button></div>
         </>
       )}
 
-      {step === 2 && (
+      {step === 1 && (
         <>
-          <p className="lede" style={{ fontSize: 17 }}>Connect the tools you already use. Bring your own key, or log in via MCP. No FullEnrich or Sillage? Skip — Litmus still scores your CRM/CSV contacts.</p>
+          <p className="lede" style={{ fontSize: 17 }}>Your workspace tools are already connected. Nothing to paste — this is just what Litmus is reading from. (In production each account brings its own keys.)</p>
           {SOURCES.map((s) => {
             const c = conns[s.key];
+            const workspace = c?.mode === "workspace" && c?.connected;
             return (
               <div className="source" key={s.key}>
                 <div className="source-head">
                   <div><b>{s.name}</b> <span className="src-role">{s.role}</span></div>
                   <span className={`dot ${c?.connected ? "ok" : ""}`}>{c?.connected ? "● connected" : "○ not connected"}</span>
                 </div>
-                <div className="source-modes">
-                  {s.modes.map((m) => (
-                    <button key={m} className={c?.mode === m ? "primary" : "ghost"} onClick={() => setConns({ ...conns, [s.key]: { mode: m, connected: false } })}>{m}</button>
-                  ))}
-                </div>
-                {c?.mode === "API key" && (
-                  <input placeholder={`${s.name} API key`} onChange={(e) => setConns({ ...conns, [s.key]: { mode: "API key", connected: e.target.value.length > 8 } })} />
-                )}
-                {c?.mode === "MCP login" && (
-                  <button className="ghost" onClick={() => setConns({ ...conns, [s.key]: { mode: "MCP login", connected: true } })}>{c.connected ? "✓ logged in" : `Log in to ${s.name} via MCP →`}</button>
+                {workspace ? (
+                  <div className="small" style={{ marginTop: 4 }}>✓ using the workspace key — nothing to enter</div>
+                ) : (
+                  <>
+                    <div className="source-modes">
+                      {s.modes.map((m) => (
+                        <button key={m} className={c?.mode === m ? "primary" : "ghost"} onClick={() => setConns({ ...conns, [s.key]: { mode: m, connected: false } })}>{m}</button>
+                      ))}
+                    </div>
+                    {c?.mode === "API key" && (
+                      <input placeholder={`${s.name} API key`} onChange={(e) => setConns({ ...conns, [s.key]: { mode: "API key", connected: e.target.value.length > 8 } })} />
+                    )}
+                    {c?.mode === "MCP login" && (
+                      <button className="ghost" onClick={() => setConns({ ...conns, [s.key]: { mode: "MCP login", connected: true } })}>{c.connected ? "✓ logged in" : `Log in to ${s.name} via MCP →`}</button>
+                    )}
+                  </>
                 )}
               </div>
             );
           })}
-          <div className="row"><button className="ghost" onClick={() => setStep(1)}>← Back</button><button className="primary" onClick={() => setStep(3)}>Next: choose your output →</button></div>
+          <div className="row"><button className="primary" onClick={() => setStep(2)}>Next: your context →</button></div>
         </>
       )}
 

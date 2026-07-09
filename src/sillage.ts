@@ -51,6 +51,7 @@ export const listSignals = (args: { page_size?: number; agent_id?: number; curso
   callTool<{ data: any[]; meta: { next_cursor: string | null; has_more: boolean } }>("sillage_v2_list_signals", args);
 export const getSignal = (id: number) => callTool("sillage_v2_get_signal", { id });
 export const getLead = (lead_id: number) => callTool<any>("sillage_v2_get_lead", { lead_id });
+export const readTopAccounts = () => callTool<any>("sillage_v2_read_top_account_list", { view: "accounts" });
 export const getCompanyMapping = (args: Record<string, unknown>) => callTool("sillage_v2_get_company_mapping", args);
 export const getContents = (args: Record<string, unknown> = {}) => callTool("sillage_v2_get_contents", args);
 

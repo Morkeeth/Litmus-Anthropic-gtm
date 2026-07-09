@@ -148,6 +148,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--fg); box-shadow
 .conn:last-child { border: none; }
 .dot { color: var(--faint); } .dot.ok { color: var(--hot); }
 
+/* Onboarding auto-fill */
+.autofill { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 8px 0 24px; background: var(--subtle); }
+.autofill-h { font-size: 13.5px; color: var(--fg); margin-bottom: 10px; }
+
 /* Onboarding layers */
 .layer { margin: 24px 0; padding-top: 4px; }
 .layer-h { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
