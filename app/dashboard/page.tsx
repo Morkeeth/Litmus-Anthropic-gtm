@@ -23,12 +23,24 @@ export default function Dashboard() {
   const [state, setState] = useState<Record<string, "sent" | "killed">>({});
   const [brand, setBrand] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState<"mock" | "live">("mock");
 
   useEffect(() => {
     const c = localStorage.getItem("litmus_context");
     if (c) { try { setBrand(JSON.parse(c).what_we_sell?.slice(0, 60) ?? ""); } catch {} }
     fetch("/api/prospects").then((r) => r.json()).then((d) => { setProspects(d.prospects ?? []); setLoading(false); });
   }, []);
+
+  async function runLive() {
+    const c = localStorage.getItem("litmus_context");
+    if (!c) { alert("Set up your client context first (onboarding)."); return; }
+    setLoading(true);
+    const res = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientContext: JSON.parse(c) }) }).then((r) => r.json());
+    setLoading(false);
+    if (res.error) { alert(`Live run: ${res.error}`); return; }
+    setProspects(res.prospects ?? []); setSource("live"); setState({});
+  }
 
   async function act(id: string, verdict: "up" | "down", reason?: string) {
     setState((s) => ({ ...s, [id]: verdict === "up" ? "sent" : "killed" }));
@@ -46,6 +58,9 @@ export default function Dashboard() {
       </header>
       <div className="subhead">
         {loading ? "Scoring the firehose…" : `Top ${live.length} of the day${brand ? ` · for “${brand}${brand.length >= 60 ? "…" : ""}”` : ""}`}
+        {source === "live" ? " · live" : ""}
+        {" · "}
+        <a onClick={runLive} style={{ cursor: "pointer" }}>run live ↻</a>
         {" · "}
         <Link href="/onboarding">edit context</Link>
       </div>
