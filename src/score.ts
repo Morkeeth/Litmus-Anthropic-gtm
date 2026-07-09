@@ -20,7 +20,7 @@ export interface ScoreConfig {
   topN?: number;
 }
 
-const MODEL = process.env.LITMUS_MODEL || "claude-fable-5";
+const MODEL = process.env.LITMUS_MODEL || "claude-sonnet-5"; // Sonnet: economical for volume scoring
 
 function prompt(): string {
   // LITMUS.md holds the "## SYSTEM PROMPT" section; everything under that heading is the prompt.
@@ -111,19 +111,29 @@ export async function scoreSignal(input: ScoreInput, cfg: ScoreConfig): Promise<
     tool_choice: { type: "tool", name: "emit_score" },
   });
   const tu = res.content.find((c): c is Anthropic.ToolUseBlock => c.type === "tool_use");
-  const out = (tu?.input ?? {}) as Omit<ScoredSignal, "signal_id" | "score" | "warm_path" | "factors"> & {
-    factors: ScoreFactor[];
-  };
+  if (process.env.LITMUS_DEBUG) console.error("[emit_score]", JSON.stringify(tu?.input));
+  const out = (tu?.input ?? {}) as Record<string, any>;
+  const arr = (v: any): any[] => (Array.isArray(v) ? v : typeof v === "string" ? safeParse(v) : []);
+  const factors = arr(out.factors) as ScoreFactor[];
   return {
     signal_id: input.signal.signal_id,
-    score: composite(out.factors ?? []),
-    rank_reason: out.rank_reason,
-    factors: out.factors ?? [],
+    score: composite(factors),
+    rank_reason: out.rank_reason ?? "",
+    factors,
     enriched: input.enriched,
     warm_path: warm ?? undefined,
-    drafts: out.drafts ?? [],
-    evidence: out.evidence ?? [],
+    drafts: arr(out.drafts),
+    evidence: arr(out.evidence),
   };
+}
+
+function safeParse(s: string): any[] {
+  try {
+    const v = JSON.parse(s);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
 }
 
 // Score the batch, rank, return only the top N — the overloaded rep's worklist.

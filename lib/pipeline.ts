@@ -7,10 +7,20 @@ import { peopleSearch, enrichContacts } from "../src/fullenrich";
 import { normalizeFullEnrichProfile, mergeFullEnrichContactInfo } from "../src/normalize";
 import { scoreAndRank, type ScoreInput } from "../src/score";
 
-const MODEL = process.env.LITMUS_MODEL || "claude-fable-5";
+const MODEL = process.env.LITMUS_MODEL || "claude-sonnet-5";
 
 // Turn the freeform ICP into FullEnrich people/search filters (an AI-depth step).
-// Filter objects are { value, exact_match?, exclude? }. Falls back to a broad title search.
+// Filter objects are { value, exact_match?, exclude? }. We ONLY use enum-free filters
+// (titles/locations/company-names are free text; headcounts is {min,max}) to avoid
+// error.filters.enum.invalid from seniority/industry enums. Falls back to a broad title search.
+const SAFE_FILTER_KEYS = new Set([
+  "current_position_titles",
+  "person_locations",
+  "current_company_names",
+  "current_company_headcounts",
+]);
+const FALLBACK_FILTERS = { current_position_titles: [{ value: "VP Sales" }] };
+
 async function deriveFilters(ctx: ClientContext): Promise<Record<string, unknown>> {
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -18,24 +28,28 @@ async function deriveFilters(ctx: ClientContext): Promise<Record<string, unknown
       model: MODEL,
       max_tokens: 500,
       system:
-        "Convert this seller's ICP into FullEnrich people/search filters. Return arrays of {value} objects. " +
-        "Keys you may use: current_position_titles, current_position_seniority_level, current_company_industries, " +
-        "current_company_headcounts ({min,max}), person_locations. Only include what the ICP clearly implies.",
+        "Convert this seller's ICP into FullEnrich people/search filters. Use ONLY these keys: " +
+        "current_position_titles (array of {value}, free text job titles), person_locations (array of {value}), " +
+        "current_company_names (array of {value}), current_company_headcounts (array of {min,max}). " +
+        "Do NOT use seniority or industry. Only include what the ICP clearly implies.",
       messages: [{ role: "user", content: JSON.stringify(ctx) }],
       tools: [
         {
           name: "emit_filters",
-          description: "FullEnrich people/search filters",
+          description: "FullEnrich people/search filters (enum-free keys only)",
           input_schema: { type: "object", properties: {}, additionalProperties: true },
         },
       ],
       tool_choice: { type: "tool", name: "emit_filters" },
     });
     const tu = res.content.find((c): c is Anthropic.ToolUseBlock => c.type === "tool_use");
-    const f = (tu?.input ?? {}) as Record<string, unknown>;
-    return Object.keys(f).length ? f : { current_position_titles: [{ value: "VP Sales" }] };
+    const raw = (tu?.input ?? {}) as Record<string, unknown>;
+    // whitelist: drop anything with an enum constraint even if the model returned it
+    const f: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(raw)) if (SAFE_FILTER_KEYS.has(k)) f[k] = v;
+    return Object.keys(f).length ? f : FALLBACK_FILTERS;
   } catch {
-    return { current_position_titles: [{ value: "VP Sales" }] };
+    return FALLBACK_FILTERS;
   }
 }
 

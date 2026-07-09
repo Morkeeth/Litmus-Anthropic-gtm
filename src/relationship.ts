@@ -4,15 +4,18 @@
 // TODO Thursday: load seed, implement lookup. Flat JSON first; SQLite only if time allows.
 
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { RelationshipEdge, WarmPath } from "./types";
 
 let edges: RelationshipEdge[] | null = null;
 
 function load(): RelationshipEdge[] {
   if (!edges) {
-    edges = JSON.parse(
-      readFileSync(new URL("../mock/relationships.json", import.meta.url), "utf8"),
-    );
+    try {
+      edges = JSON.parse(readFileSync(join(process.cwd(), "mock/relationships.json"), "utf8"));
+    } catch {
+      edges = [];
+    }
   }
   return edges!;
 }
