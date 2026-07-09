@@ -41,14 +41,14 @@ Forced structured JSON out. Loop capped ~5 tool calls. Demo reads the pre-warm c
 
 | Time | Milestone | Owner |
 |---|---|---|
-| 9:00–9:30 | Grab FullEnrich + Sillage keys at kickoff. Confirm FullEnrich base URL + auth. Lock mock signal schema (incl. champion type). | all |
+| 9:00–9:30 | FullEnrich key (Bearer). Sillage MCP: `claude mcp add --transport http sillage https://api.getsillage.com/api/mcp/v2`, OAuth login to workspace. Seed workspace if empty (persona→accounts→agent→signal run). Pull real signals, cache to disk. | Oscar (Sillage) / Pierre (FullEnrich) |
 | 9:30–11:00 | FullEnrich client: sync `search_company` + `search_people` return real data. `enrich_contact` poll wrapper. Credits logged. | Pierre |
 | 9:30–11:00 | Seed relationship DB (edges: person/company/type/strength/as_of) from a small CSV + a couple of champion-history rows. `lookup_relationship` tool. | Pierre |
 | 11:00–13:00 | Fable verify loop: tools wired (FullEnrich + relationship), **two-axis structured JSON verdict**, evidence chain, explicit per-axis rules. | Pierre + Oscar |
 | 13:00–13:30 | Lunch / integrate: loop runs real FullEnrich + relationship end-to-end on one signal. | all |
 | 13:30–15:00 | Curate 3–4 demo signals (REAL+COLD, NOISE gotcha, REAL+WARM champion, UNPROVEN). UI: 2×2 verdict cards + evidence. | Oscar + Desiree |
 | 15:00–16:00 | **Pre-warm cache built and wired.** Demo runs entirely from cache. Freeze round-1 cut first. MCP wrapper (~50 lines, same verify fn) if on schedule — first cut if hot. | Pierre |
-| 16:00–16:30 | Swap in live Sillage feed if we have a key, else polish the mock path. Wire the round-2 depth beat. | Pierre |
+| 16:00–16:30 | Wire the live MCP-to-MCP round-2 loop (Sillage MCP in, Litmus MCP out) as the flourish. Dashboard already runs on cached real signals from the morning pull. | Pierre |
 | 16:30–17:30 | Freeze build. Cache everything. Rehearse round-1 (60s) x3 and round-2 depth x2. | all |
 
 ## Stack

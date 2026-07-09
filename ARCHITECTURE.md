@@ -78,7 +78,9 @@ One Node/TS process serves engine + API + dashboard. Localhost is the demo subst
 
 ### Components
 
-1. **Signal ingest.** Mock `mock/signals.json` from minute zero. Live Sillage is a swap-in, never a dependency. Champion-move signals are just another `type` in the same schema.
+1. **Signal ingest — Sillage MCP.** Sillage ships a remote MCP server: `https://api.getsillage.com/api/mcp/v2` (streamable HTTP, OAuth 2.1, workspace-scoped, no API key). We pull real signals with `sillage_v2_list_signals` / `sillage_v2_get_signal`; `sillage_v2_get_company_mapping` returns company + people profiles. Empty workspace? Seed it via MCP: `upsert_persona` → `add_top_accounts` → `create_agent` → `launch_signal_run`. `mock/signals.json` is now the FALLBACK, not the primary. Ingest boundary maps any signal → our `Signal` type.
+   - OAuth is trivial in an interactive client (Claude Code) but awkward for our headless server to hold a token. Decision: pull real signals via Claude Code and **cache to disk before the pitch**; the dashboard demo reads the cache (real Sillage data, deterministic, no OAuth on the critical path). Live MCP-to-MCP loop is the round-2 flourish.
+   - Independence rule: we verify Sillage signals with **FullEnrich** (an outside witness), never with `sillage_v2_enrich_company` (circular). Independence is what makes both sponsors load-bearing.
 2. **FullEnrich client (truth substrate).** Sync `search_company` + `search_people`; `enrich_contact` wraps the async poll. Cap loop at ~5 tool calls. `GET /account/credits` logged.
 3. **Relationship DB (warmth substrate).** Seeded SQLite (or flat JSON if time is tight). Table: `edges(person, company, relationship_type, strength, as_of)`. Read-only. **No graph-building** — seeded only. One tool: `lookup_relationship(person) -> path | none`.
 4. **Agent loop (brain).** Fable. FullEnrich + relationship calls exposed as tools. **Forced structured JSON output** — UI renders from JSON, never parses prose live.
