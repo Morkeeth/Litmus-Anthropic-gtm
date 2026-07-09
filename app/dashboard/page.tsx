@@ -137,12 +137,25 @@ export default function Dashboard() {
 
   function openEval(p: Prospect) { setEvalFor(p); setEvalLead({ reason: "" }); setEvalMsg({ reason: "" }); }
 
+  async function sendVia(p: Prospect, channel: "email" | "telegram") {
+    const draft = p.drafts?.find((d) => d.channel === channel);
+    const res = await fetch("/api/send", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel, subject: draft?.subject, text: draft?.body ?? p.rank_reason }) }).then((r) => r.json()).catch(() => ({ error: "network" }));
+    if (res.dry_run) { alert(`Dry-run — would send ${channel}. (Set LITMUS_SEND_ARMED=1 to send for real.)`); return; }
+    if (res.error) { alert(`Send failed (${channel}): ${res.error}`); return; }
+    setState((s) => ({ ...s, [p.signal_id]: "sent" }));
+    fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ signal_id: p.signal_id, key: keyOf(p), verdict: "up" }) });
+    alert(`✅ Sent via ${channel} to ${res.to}`);
+  }
+
   const [calling, setCalling] = useState<string | null>(null);
   async function callVoice(p: Prospect) {
     setCalling(p.signal_id);
-    // Demo: hand the scored context + call script to the Grok Voice agent (xAI). Real call is SIP + approval.
-    const script = p.drafts?.find((d) => d.channel === "call")?.body ?? p.why_now?.trigger ?? p.rank_reason;
-    setTimeout(() => { alert(`📞 xAI Voice agent briefed for ${p.enriched?.full_name}:\n\n"${script}"\n\n(demo — real call places over SIP with an approval gate)`); setCalling(null); }, 700);
+    const brief = `Brief me on ${p.enriched?.full_name} at ${p.enriched?.company?.name ?? ""}. Score ${p.score}. ${p.rank_reason} Why now: ${p.why_now?.why_buying ?? ""}`;
+    const res = await fetch("/api/voice-brief", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: brief }) }).then((r) => r.json()).catch(() => ({ error: "network" }));
+    setCalling(null);
+    if (res.error) { alert(`Voice agent: ${res.error}`); return; }
+    alert(`📞 xAI Grok Voice — briefing on ${p.enriched?.full_name}:\n\n🔊 "${res.transcript || "(audio streamed to your phone)"}"`);
   }
 
   async function submitEval() {
@@ -253,8 +266,8 @@ export default function Dashboard() {
                       <button className="sent" disabled>✓ sent</button>
                     ) : (
                       <>
-                        <button className="primary" onClick={() => act(p, "up")}>✉ Email</button>
-                        <button className="ghost" onClick={() => act(p, "up")}>💬 Telegram</button>
+                        <button className="primary" onClick={() => sendVia(p, "email")}>✉ Email</button>
+                        <button className="ghost" onClick={() => sendVia(p, "telegram")}>💬 Telegram</button>
                         <button className="ghost" onClick={() => act(p, "up")}>🔗 LinkedIn</button>
                         <button className="ghost" onClick={() => callVoice(p)} disabled={calling === p.signal_id}>{calling === p.signal_id ? "☎ dialing…" : "📞 Call · xAI Voice"}</button>
                         <button className="ghost" onClick={() => openEval(p)}>Rate</button>

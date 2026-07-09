@@ -53,10 +53,11 @@ export async function sendEmail(params: {
   return call("POST", "/emails", params);
 }
 
-// (c) Send a LinkedIn message to an existing chat/connection. POST /chats/{chat_id}/messages
-export async function sendLinkedInMessage(chatId: string, text: string) {
+// (c) Send a message to any existing chat (LinkedIn, Telegram, WhatsApp…). POST /chats/{chat_id}/messages
+export async function sendChatMessage(chatId: string, text: string) {
   return call("POST", `/chats/${chatId}/messages`, { text });
 }
+export const sendLinkedInMessage = sendChatMessage;
 
 // Start a new 1:1 LinkedIn chat (recipient must be reachable — existing connection for the demo).
 export async function startLinkedInChat(params: {
