@@ -11,19 +11,16 @@ export default function Home() {
       </header>
 
       <p className="lede">
-        <span className="drop">S</span>illage surfaces a lot of intent. That is the point, and the
-        problem. Every morning a rep opens a firehose of signals with no principled way to decide
-        which five accounts to work, why, or how to reach them. Litmus scores the firehose against
-        what you actually sell, ranks the ten that matter, and drafts the outreach. You approve. It
-        sends.
+        <span className="drop">S</span>illage shows you a lot of sales opportunities. That is helpful,
+        but it is also a lot to handle. Every morning a rep faces a flood of opportunities with no
+        clear way to pick which accounts to work, why, or how to reach them. Litmus reads them all,
+        matches them to what you sell, picks the ten that matter most, and writes the outreach. You
+        approve. It sends.
       </p>
 
       <div className="row">
         <Link href="/onboarding">
-          <button className="primary">Set up your brief →</button>
-        </Link>
-        <Link href="/dashboard">
-          <button className="ghost">Skip to today&rsquo;s brief</button>
+          <button className="primary">Set up your preferences →</button>
         </Link>
       </div>
 
