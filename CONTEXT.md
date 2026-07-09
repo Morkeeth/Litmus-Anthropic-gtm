@@ -44,5 +44,8 @@ Score = `100 × real × icp_fit × (0.6 + 0.25·urgent + 0.15·warm)`. Sonnet fo
 - [ ] HubSpot output sink (account now available) — stretch.
 - [ ] Slack sink live (Block Kit) when a webhook is added.
 
+## Roadmap (post-hackathon)
+- **Knowledge base / RAG over seller collateral** (Jonathan's pitch, Jul 9): retrieve the seller's case studies, battlecards, winning emails per prospect to ground scoring + drafts. Real depth lever + moat. NOT for the hackathon (scope). Cheap first step: a "paste your docs" context field before committing to a vector DB — big context windows may beat retrieval for a single seller's corpus.
+
 ## Rules
 Trunk-based, commit every ~20-30 min, push immediately, `main` always demoable. See `WORKFLOW.md`. Keys: `.env` from `.env.example` (Anthropic/FullEnrich/Sillage on Vercel; Unipile local only).
