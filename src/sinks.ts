@@ -9,40 +9,52 @@ export interface Sink {
   push(items: ScoredSignal[]): Promise<void>;
 }
 
-// ---------- Slack (guaranteed demo sink) ----------
-// Incoming webhook + Block Kit card. 5-min setup, zero account gating.
-// Env: SLACK_WEBHOOK_URL
+// ---------- Slack (delivery sink) ----------
+// Two transports: bot token (chat.postMessage, richer) OR incoming webhook (simplest).
+// Env: SLACK_BOT_TOKEN + SLACK_CHANNEL  — or —  SLACK_WEBHOOK_URL. Optional LITMUS_APP_URL.
+// Cards link back to the dashboard to review+send (no Slack interactivity endpoint needed).
+function slackBlocks(items: ScoredSignal[], appUrl: string) {
+  const blocks: any[] = [
+    { type: "header", text: { type: "plain_text", text: `🎯 Litmus — ${items.length} to work today` } },
+  ];
+  for (const s of items) {
+    const e = s.enriched;
+    blocks.push({ type: "divider" });
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*${s.score}/100 · ${e?.full_name ?? "?"}* — ${e?.title ?? ""}${e?.company?.name ? ` @ ${e.company.name}` : ""}\n${s.rank_reason}${s.why_now ? `\n_Why now:_ ${s.why_now.trigger} — ${s.why_now.why_buying}` : ""}${e?.work_email?.email ? `\n✉ ${e.work_email.email}` : ""}${s.warm_path ? `\n🔗 warm via ${s.warm_path.via}` : ""}`,
+      },
+      accessory: { type: "button", text: { type: "plain_text", text: "Review & send →" }, url: `${appUrl}/dashboard`, action_id: `open_${s.signal_id}` },
+    });
+  }
+  return blocks;
+}
+
 export const slackSink: Sink = {
   name: "slack",
   async push(items) {
-    const url = process.env.SLACK_WEBHOOK_URL;
-    if (!url) throw new Error("SLACK_WEBHOOK_URL not set");
-    for (const s of items) {
-      const blocks = [
-        { type: "header", text: { type: "plain_text", text: `🔥 ${s.score}/100 — ${s.rank_reason}` } },
-        {
-          type: "section",
-          fields: [
-            { type: "mrkdwn", text: `*Contact:*\n${s.enriched?.full_name ?? "?"} — ${s.enriched?.title ?? ""}` },
-            { type: "mrkdwn", text: `*Reachable:*\n${s.enriched?.work_email?.email ?? "—"}` },
-            { type: "mrkdwn", text: `*Warm path:*\n${s.warm_path ? `via ${s.warm_path.via}` : "cold"}` },
-            { type: "mrkdwn", text: `*Signal:*\n${s.signal_id}` },
-          ],
-        },
-        // action buttons wire to the /send endpoint (Unipile) in the app
-        {
-          type: "actions",
-          elements: [
-            { type: "button", text: { type: "plain_text", text: "Send email" }, value: s.signal_id, action_id: "send_email" },
-            { type: "button", text: { type: "plain_text", text: "Send LinkedIn" }, value: s.signal_id, action_id: "send_linkedin" },
-          ],
-        },
-      ];
-      await fetch(url, {
+    if (items.length === 0) return;
+    const appUrl = process.env.LITMUS_APP_URL || "https://litmus-roan.vercel.app";
+    const blocks = slackBlocks(items, appUrl);
+    const token = process.env.SLACK_BOT_TOKEN;
+    const channel = process.env.SLACK_CHANNEL;
+    const webhook = process.env.SLACK_WEBHOOK_URL;
+
+    if (token && channel) {
+      const res = await fetch("https://slack.com/api/chat.postMessage", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blocks }),
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({ channel, blocks, text: `Litmus: ${items.length} prospects to work today` }),
       });
+      const j = await res.json();
+      if (!j.ok) throw new Error(`Slack chat.postMessage failed: ${j.error}`);
+    } else if (webhook) {
+      const res = await fetch(webhook, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ blocks }) });
+      if (!res.ok) throw new Error(`Slack webhook failed: ${res.status}`);
+    } else {
+      throw new Error("Slack not configured (set SLACK_BOT_TOKEN+SLACK_CHANNEL or SLACK_WEBHOOK_URL)");
     }
   },
 };
