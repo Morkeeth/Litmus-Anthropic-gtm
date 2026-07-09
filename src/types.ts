@@ -95,6 +95,7 @@ export interface ClientContext {
 export interface Feedback {
   signal_id: string;
   kind: "output_eval" | "client_reply"; // rep thumbs vs prospect actually replied
+  target?: "lead" | "message"; // did they rate the LEAD (scoring) or the MESSAGE (draft)?
   verdict: "up" | "down";
   reason?: string; // the attribution label that tunes the prompt
   at: string;

@@ -52,6 +52,9 @@ export default function Dashboard() {
   const [stage, setStage] = useState(0);
   const [source, setSource] = useState<"mock" | "live">("mock");
   const [focusId, setFocusId] = useState<string | null>(null);
+  const [evalFor, setEvalFor] = useState<Prospect | null>(null);
+  const [evalLead, setEvalLead] = useState<{ verdict?: "up" | "down"; reason: string }>({ reason: "" });
+  const [evalMsg, setEvalMsg] = useState<{ verdict?: "up" | "down"; reason: string }>({ reason: "" });
 
   const filler = useMemo(() => makeCloud(120), []);
 
@@ -107,10 +110,22 @@ export default function Dashboard() {
     setTimeout(() => setPhase("brief"), FUNNEL.length * 500 + 400);
   }
 
+  const keyOf = (p: Prospect) => (p.enriched?.work_email?.email || (p.enriched?.full_name && `${p.enriched.full_name}@${p.enriched?.company?.name ?? ""}`) || p.signal_id).toLowerCase();
+
   async function act(p: Prospect, verdict: "up" | "down", reason?: string) {
     setState((s) => ({ ...s, [p.signal_id]: verdict === "up" ? "sent" : "killed" }));
-    const key = (p.enriched?.work_email?.email || (p.enriched?.full_name && `${p.enriched.full_name}@${p.enriched?.company?.name ?? ""}`) || p.signal_id).toLowerCase();
-    fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ signal_id: p.signal_id, key, kind: "output_eval", verdict, reason }) });
+    fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ signal_id: p.signal_id, key: keyOf(p), verdict, reason }) });
+  }
+
+  function openEval(p: Prospect) { setEvalFor(p); setEvalLead({ reason: "" }); setEvalMsg({ reason: "" }); }
+
+  async function submitEval() {
+    const p = evalFor!;
+    await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signal_id: p.signal_id, key: keyOf(p),
+        lead: evalLead.verdict ? evalLead : undefined, message: evalMsg.verdict ? evalMsg : undefined }) });
+    if (evalLead.verdict === "down") setState((s) => ({ ...s, [p.signal_id]: "killed" }));
+    setEvalFor(null);
   }
 
   const live = prospects.filter((p) => state[p.signal_id] !== "killed");
@@ -209,7 +224,7 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <button className="primary" onClick={() => act(p, "up")}>Approve & send →</button>
-                        <button className="ghost" onClick={() => act(p, "down", "rejected in brief")}>Decline</button>
+                        <button className="ghost" onClick={() => openEval(p)}>Rate & improve</button>
                       </>
                     )}
                   </div>
@@ -229,6 +244,39 @@ export default function Dashboard() {
         <div className="conn"><span>Output · Slack / dashboard / your agent</span><span className="dot ok">● dashboard</span></div>
       </div>
       <footer>LITMUS · scored by LITMUS.md · a false negative is cheaper than a burned touch</footer>
+
+      {evalFor && (
+        <div className="modal-bg" onClick={() => setEvalFor(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-h">Teach Litmus</div>
+            <div className="modal-sub">Rate {evalFor.enriched?.full_name ?? "this prospect"} — your feedback tunes the next brief.</div>
+
+            <div className="eval-row">
+              <div className="eval-q">Was this a good <b>lead</b>?</div>
+              <div className="eval-btns">
+                <button className={evalLead.verdict === "up" ? "primary" : "ghost"} onClick={() => setEvalLead({ ...evalLead, verdict: "up" })}>👍 yes</button>
+                <button className={evalLead.verdict === "down" ? "primary" : "ghost"} onClick={() => setEvalLead({ ...evalLead, verdict: "down" })}>👎 no</button>
+              </div>
+              <input placeholder="why? (wrong persona · not in-market · already a customer…)" value={evalLead.reason} onChange={(e) => setEvalLead({ ...evalLead, reason: e.target.value })} />
+            </div>
+
+            <div className="eval-row">
+              <div className="eval-q">Was the <b>message</b> good?</div>
+              <div className="eval-btns">
+                <button className={evalMsg.verdict === "up" ? "primary" : "ghost"} onClick={() => setEvalMsg({ ...evalMsg, verdict: "up" })}>👍 yes</button>
+                <button className={evalMsg.verdict === "down" ? "primary" : "ghost"} onClick={() => setEvalMsg({ ...evalMsg, verdict: "down" })}>👎 no</button>
+              </div>
+              <input placeholder="why? (too generic · wrong tone · nailed it…)" value={evalMsg.reason} onChange={(e) => setEvalMsg({ ...evalMsg, reason: e.target.value })} />
+            </div>
+
+            <div className="row" style={{ marginTop: 18 }}>
+              <button className="primary" onClick={submitEval} disabled={!evalLead.verdict && !evalMsg.verdict}>Submit — teach Litmus</button>
+              <button className="ghost" onClick={() => setEvalFor(null)}>Cancel</button>
+            </div>
+            <div className="small" style={{ marginTop: 10 }}>Rejected leads go quiet; your reasons become few-shot examples the scorer learns from.</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

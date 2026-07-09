@@ -31,7 +31,7 @@ function prompt(): string {
 
 function fill(tpl: string, cfg: ScoreConfig, input: ScoreInput, warm: unknown): string {
   const feedback = (cfg.feedbackExamples ?? [])
-    .map((f) => `- [${f.verdict.toUpperCase()}] ${f.signal_id}${f.reason ? ` — ${f.reason}` : ""}`)
+    .map((f) => `- ${f.target ?? "lead"} ${f.verdict === "up" ? "👍 approved" : "👎 rejected"}${f.reason ? ` — ${f.reason}` : ""}`)
     .join("\n") || "(no feedback yet)";
   return tpl
     .replaceAll("{{CLIENT_CONTEXT}}", JSON.stringify(cfg.clientContext, null, 2))

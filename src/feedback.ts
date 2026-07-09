@@ -29,6 +29,6 @@ export function loadFeedback(limit = 20): Feedback[] {
 export function feedbackToFewShot(items: Feedback[]): string {
   if (items.length === 0) return "(no feedback yet)";
   return items
-    .map((f) => `- [${f.verdict.toUpperCase()}] signal ${f.signal_id}${f.reason ? ` — ${f.reason}` : ""}`)
+    .map((f) => `- ${f.target ?? "lead"} ${f.verdict === "up" ? "👍 approved" : "👎 rejected"}${f.reason ? ` — ${f.reason}` : ""}`)
     .join("\n");
 }
