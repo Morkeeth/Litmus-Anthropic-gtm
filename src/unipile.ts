@@ -37,6 +37,12 @@ export async function listAccounts() {
   return call<{ items: any[] }>("GET", "/accounts");
 }
 
+// Resolve an account_id by provider type (GOOGLE_OAUTH, TELEGRAM, LINKEDIN, ...).
+export async function accountIdByType(type: string): Promise<string | undefined> {
+  const { items } = await listAccounts();
+  return items?.find((a) => (a.type ?? "").toUpperCase().includes(type.toUpperCase()))?.id;
+}
+
 // (b) Send email via the rep's Gmail. POST /emails
 export async function sendEmail(params: {
   account_id: string;
