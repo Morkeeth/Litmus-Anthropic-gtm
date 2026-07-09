@@ -2,95 +2,348 @@
   {
     "signal_id": "sig_champion_01",
     "score": 92,
-    "rank_reason": "The VP Eng who championed you at Notion just landed at Ramp six weeks ago — squarely in-ICP, and warm through Marie.",
-    "why_now": { "trigger": "Started as VP Engineering at Ramp 6 weeks ago", "what_changed": "A past champion who drove your Notion deal now holds a buying seat at an ICP account", "why_buying": "New leaders re-tool in their first 90 days — and this one already knows your product works" },
+    "rank_reason": "The VP Eng who championed you at Notion just landed at Ramp six weeks ago \u2014 squarely in-ICP, and warm through Marie.",
+    "why_now": {
+      "trigger": "Started as VP Engineering at Ramp 6 weeks ago",
+      "what_changed": "A past champion who drove your Notion deal now holds a buying seat at an ICP account",
+      "why_buying": "New leaders re-tool in their first 90 days \u2014 and this one already knows your product works"
+    },
     "factors": [
-      { "key": "real", "value": 1.0, "detail": "FullEnrich: is_current_role true, VP Engineering @ ramp.com, started 2026-05-26" },
-      { "key": "icp_fit", "value": 1.0, "detail": "fintech, 500-1000, VP Eng persona — matches ICP" },
-      { "key": "urgent", "value": 1.0, "detail": "job change 6 weeks ago — inside the 30-90d window" },
-      { "key": "warm", "value": 0.9, "detail": "past champion, drove the Notion deal; edge held by Marie, as_of 2026-05" }
+      {
+        "key": "real",
+        "value": 1.0,
+        "detail": "FullEnrich: is_current_role true, VP Engineering @ ramp.com, started 2026-05-26"
+      },
+      {
+        "key": "icp_fit",
+        "value": 1.0,
+        "detail": "fintech, 500-1000, VP Eng persona \u2014 matches ICP"
+      },
+      {
+        "key": "urgent",
+        "value": 1.0,
+        "detail": "job change 6 weeks ago \u2014 inside the 30-90d window"
+      },
+      {
+        "key": "warm",
+        "value": 0.9,
+        "detail": "past champion, drove the Notion deal; edge held by Marie, as_of 2026-05"
+      }
     ],
-    "enriched": { "full_name": "Sarah Chen", "title": "VP Engineering", "company": { "name": "Ramp" }, "work_email": { "email": "s.chen@ramp.com", "status": "DELIVERABLE" }, "mobile": { "number": "+1 415 ··· ··21" } },
-    "warm_path": { "via": "Marie Dupont", "relationship": "past champion at Notion" },
+    "enriched": {
+      "full_name": "Sarah Chen",
+      "title": "VP Engineering",
+      "company": {
+        "name": "Ramp"
+      },
+      "work_email": {
+        "email": "s.chen@ramp.com",
+        "status": "DELIVERABLE"
+      },
+      "mobile": {
+        "number": "+1 415 \u00b7\u00b7\u00b7 \u00b7\u00b721"
+      }
+    },
+    "warm_path": {
+      "via": "Marie Dupont",
+      "relationship": "past champion at Notion"
+    },
     "drafts": [
-      { "channel": "email", "subject": "Congrats on the Ramp move", "body": "Sarah — saw you joined Ramp. When we worked together at Notion you pushed hard for exactly this kind of rollout; figured the same problem follows you. Worth 20 minutes before your Q3 planning locks? Happy to have Marie make the intro if easier." },
-      { "channel": "linkedin", "body": "Congrats on Ramp, Sarah. Marie and I were just talking about you — same problem we solved at Notion is probably on your desk again. Quick catch-up?" }
+      {
+        "channel": "email",
+        "subject": "Congrats on the Ramp move",
+        "body": "Sarah \u2014 saw you joined Ramp. When we worked together at Notion you pushed hard for exactly this kind of rollout; figured the same problem follows you. Worth 20 minutes before your Q3 planning locks? Happy to have Marie make the intro if easier."
+      },
+      {
+        "channel": "linkedin",
+        "body": "Congrats on Ramp, Sarah. Marie and I were just talking about you \u2014 same problem we solved at Notion is probably on your desk again. Quick catch-up?"
+      }
+    ],
+    "evidence": [
+      {
+        "check": "person_in_role",
+        "source": "fullenrich",
+        "result": "pass",
+        "detail": "is_current_role true \u2014 VP Engineering @ ramp.com, started 2026-05-26"
+      },
+      {
+        "check": "relationship_edge",
+        "source": "relationship_db",
+        "result": "pass",
+        "detail": "past champion \u2014 drove the Notion deal; warm edge via Marie, as_of 2026-05"
+      },
+      {
+        "check": "signal_freshness",
+        "source": "sillage",
+        "result": "pass",
+        "detail": "champion move detected 6 weeks ago \u2014 inside the buying window"
+      }
     ]
   },
   {
     "signal_id": "sig_funding_01",
     "score": 81,
-    "rank_reason": "Series B closed Tuesday and they just opened four GTM roles — buying window is open now, but you have no path in.",
-    "why_now": { "trigger": "Series B closed 2 days ago + 4 GTM roles opened in 60 days", "what_changed": "Fresh capital and a hiring wave mean the RevOps stack is being built right now", "why_buying": "Scaling GTM headcount that fast breaks spreadsheet forecasting — your exact wedge, before the tooling is chosen" },
+    "rank_reason": "Series B closed Tuesday and they just opened four GTM roles \u2014 buying window is open now, but you have no path in.",
+    "why_now": {
+      "trigger": "Series B closed 2 days ago + 4 GTM roles opened in 60 days",
+      "what_changed": "Fresh capital and a hiring wave mean the RevOps stack is being built right now",
+      "why_buying": "Scaling GTM headcount that fast breaks spreadsheet forecasting \u2014 your exact wedge, before the tooling is chosen"
+    },
     "factors": [
-      { "key": "real", "value": 1.0, "detail": "FullEnrich: Head of RevOps confirmed current @ layerhq.com" },
-      { "key": "icp_fit", "value": 0.9, "detail": "B2B SaaS, post-Series-B, RevOps persona — strong fit" },
-      { "key": "urgent", "value": 1.0, "detail": "funding round 2 days ago + 4 GTM reqs in 60d" },
-      { "key": "warm", "value": 0.0, "detail": "no relationship edge — cold" }
+      {
+        "key": "real",
+        "value": 1.0,
+        "detail": "FullEnrich: Head of RevOps confirmed current @ layerhq.com"
+      },
+      {
+        "key": "icp_fit",
+        "value": 0.9,
+        "detail": "B2B SaaS, post-Series-B, RevOps persona \u2014 strong fit"
+      },
+      {
+        "key": "urgent",
+        "value": 1.0,
+        "detail": "funding round 2 days ago + 4 GTM reqs in 60d"
+      },
+      {
+        "key": "warm",
+        "value": 0.0,
+        "detail": "no relationship edge \u2014 cold"
+      }
     ],
-    "enriched": { "full_name": "Tomas Rivera", "title": "Head of RevOps", "company": { "name": "Layer" }, "work_email": { "email": "tomas@layerhq.com", "status": "DELIVERABLE" }, "mobile": { "number": "+1 646 ··· ··08" } },
+    "enriched": {
+      "full_name": "Tomas Rivera",
+      "title": "Head of RevOps",
+      "company": {
+        "name": "Layer"
+      },
+      "work_email": {
+        "email": "tomas@layerhq.com",
+        "status": "DELIVERABLE"
+      },
+      "mobile": {
+        "number": "+1 646 \u00b7\u00b7\u00b7 \u00b7\u00b708"
+      }
+    },
     "drafts": [
-      { "channel": "email", "subject": "4 GTM hires + a Series B = one painful quarter", "body": "Tomas — congrats on the raise. Four GTM roles in 60 days usually means the ops layer is about to buckle. We took a Series-B team from spreadsheet-forecasting to a clean pipeline in three weeks. Worth a look before the new hires start?" },
-      { "channel": "linkedin", "body": "Congrats on the Series B, Tomas. Scaling GTM headcount that fast is where forecasting quietly breaks — happy to share how a similar team handled it." }
+      {
+        "channel": "email",
+        "subject": "4 GTM hires + a Series B = one painful quarter",
+        "body": "Tomas \u2014 congrats on the raise. Four GTM roles in 60 days usually means the ops layer is about to buckle. We took a Series-B team from spreadsheet-forecasting to a clean pipeline in three weeks. Worth a look before the new hires start?"
+      },
+      {
+        "channel": "linkedin",
+        "body": "Congrats on the Series B, Tomas. Scaling GTM headcount that fast is where forecasting quietly breaks \u2014 happy to share how a similar team handled it."
+      }
+    ],
+    "evidence": [
+      {
+        "check": "person_in_role",
+        "source": "fullenrich",
+        "result": "pass",
+        "detail": "Head of RevOps confirmed current @ layerhq.com"
+      },
+      {
+        "check": "trigger",
+        "source": "sillage",
+        "result": "pass",
+        "detail": "Series B 2 days ago + 4 GTM reqs in 60 days"
+      }
     ]
   },
   {
     "signal_id": "sig_intent_01",
     "score": 68,
-    "rank_reason": "Their whole team has been reading category content for two weeks — real interest, real buyer, but only one signal so far.",
-    "why_now": { "trigger": "Multiple team members engaged category content across two weeks", "what_changed": "Sustained research interest — but no hard buying trigger (funding, hire, migration) yet", "why_buying": "Active research means early evaluation; worth a light, insight-led touch now, not a hard pitch" },
+    "rank_reason": "Their whole team has been reading category content for two weeks \u2014 real interest, real buyer, but only one signal so far.",
+    "why_now": {
+      "trigger": "Multiple team members engaged category content across two weeks",
+      "what_changed": "Sustained research interest \u2014 but no hard buying trigger (funding, hire, migration) yet",
+      "why_buying": "Active research means early evaluation; worth a light, insight-led touch now, not a hard pitch"
+    },
     "factors": [
-      { "key": "real", "value": 1.0, "detail": "FullEnrich: Director of Sales Ops confirmed current" },
-      { "key": "icp_fit", "value": 0.85, "detail": "mid-market SaaS, SalesOps persona — good fit" },
-      { "key": "urgent", "value": 0.5, "detail": "content engagement ongoing 2 weeks, no hard trigger" },
-      { "key": "warm", "value": 0.0, "detail": "cold" }
+      {
+        "key": "real",
+        "value": 1.0,
+        "detail": "FullEnrich: Director of Sales Ops confirmed current"
+      },
+      {
+        "key": "icp_fit",
+        "value": 0.85,
+        "detail": "mid-market SaaS, SalesOps persona \u2014 good fit"
+      },
+      {
+        "key": "urgent",
+        "value": 0.5,
+        "detail": "content engagement ongoing 2 weeks, no hard trigger"
+      },
+      {
+        "key": "warm",
+        "value": 0.0,
+        "detail": "cold"
+      }
     ],
-    "enriched": { "full_name": "Priya Nair", "title": "Director, Sales Ops", "company": { "name": "Cadence" }, "work_email": { "email": "p.nair@cadence.io", "status": "DELIVERABLE" } },
+    "enriched": {
+      "full_name": "Priya Nair",
+      "title": "Director, Sales Ops",
+      "company": {
+        "name": "Cadence"
+      },
+      "work_email": {
+        "email": "p.nair@cadence.io",
+        "status": "DELIVERABLE"
+      }
+    },
     "drafts": [
-      { "channel": "email", "subject": "Since you've been down the rabbit hole", "body": "Priya — noticed your team's been deep in [category] lately. Rather than pitch, here's the one benchmark most SalesOps leaders find surprising: [link]. If it's useful, happy to walk through where you'd land." },
-      { "channel": "linkedin", "body": "Priya — looks like [category] is on your radar this month. Sharing a benchmark most SalesOps folks find surprising, no pitch." }
+      {
+        "channel": "email",
+        "subject": "Since you've been down the rabbit hole",
+        "body": "Priya \u2014 noticed your team's been deep in [category] lately. Rather than pitch, here's the one benchmark most SalesOps leaders find surprising: [link]. If it's useful, happy to walk through where you'd land."
+      },
+      {
+        "channel": "linkedin",
+        "body": "Priya \u2014 looks like [category] is on your radar this month. Sharing a benchmark most SalesOps folks find surprising, no pitch."
+      }
     ]
   },
   {
     "signal_id": "sig_hiring_01",
     "score": 54,
-    "rank_reason": "Hiring a first RevOps lead — early signal, real company, but the buyer for you may not be in the seat yet.",
+    "rank_reason": "Hiring a first RevOps lead \u2014 early signal, real company, but the buyer for you may not be in the seat yet.",
     "factors": [
-      { "key": "real", "value": 0.8, "detail": "company confirmed; the eventual buyer role is being hired now" },
-      { "key": "icp_fit", "value": 0.8, "detail": "matches ICP firmographics" },
-      { "key": "urgent", "value": 0.5, "detail": "strategic first hire, 45d old" },
-      { "key": "warm", "value": 0.0, "detail": "cold" }
+      {
+        "key": "real",
+        "value": 0.8,
+        "detail": "company confirmed; the eventual buyer role is being hired now"
+      },
+      {
+        "key": "icp_fit",
+        "value": 0.8,
+        "detail": "matches ICP firmographics"
+      },
+      {
+        "key": "urgent",
+        "value": 0.5,
+        "detail": "strategic first hire, 45d old"
+      },
+      {
+        "key": "warm",
+        "value": 0.0,
+        "detail": "cold"
+      }
     ],
-    "enriched": { "full_name": "Daniel Okoro", "title": "COO", "company": { "name": "Fathom" }, "work_email": { "email": "daniel@fathom.co", "status": "RISKY" } },
+    "enriched": {
+      "full_name": "Daniel Okoro",
+      "title": "COO",
+      "company": {
+        "name": "Fathom"
+      },
+      "work_email": {
+        "email": "daniel@fathom.co",
+        "status": "RISKY"
+      }
+    },
     "drafts": [
-      { "channel": "email", "subject": "Before your RevOps lead starts", "body": "Daniel — saw you're hiring your first RevOps lead. The best time to fix the data foundation is before they inherit it. Quick note on what to have in place day one, if useful." },
-      { "channel": "linkedin", "body": "Daniel — hiring a first RevOps lead is a great signal. Happy to share what the strongest teams put in place before that person starts." }
+      {
+        "channel": "email",
+        "subject": "Before your RevOps lead starts",
+        "body": "Daniel \u2014 saw you're hiring your first RevOps lead. The best time to fix the data foundation is before they inherit it. Quick note on what to have in place day one, if useful."
+      },
+      {
+        "channel": "linkedin",
+        "body": "Daniel \u2014 hiring a first RevOps lead is a great signal. Happy to share what the strongest teams put in place before that person starts."
+      }
     ]
   },
   {
     "signal_id": "sig_noise_01",
     "score": 8,
-    "rank_reason": "This 'hot' account's named contact left four months ago — the signal is chasing a ghost. Killed, with proof.",
+    "rank_reason": "This 'hot' account's named contact left four months ago \u2014 the signal is chasing a ghost. Killed, with proof.",
     "factors": [
-      { "key": "real", "value": 0.0, "detail": "FullEnrich: is_current_role FALSE — left CompanyX in March, now elsewhere" },
-      { "key": "icp_fit", "value": 0.7, "detail": "account fits, but the person does not work there" },
-      { "key": "urgent", "value": 0.2, "detail": "intent surge, but attributed to a departed contact" },
-      { "key": "warm", "value": 0.0, "detail": "cold" }
+      {
+        "key": "real",
+        "value": 0.0,
+        "detail": "FullEnrich: is_current_role FALSE \u2014 left CompanyX in March, now elsewhere"
+      },
+      {
+        "key": "icp_fit",
+        "value": 0.7,
+        "detail": "account fits, but the person does not work there"
+      },
+      {
+        "key": "urgent",
+        "value": 0.2,
+        "detail": "intent surge, but attributed to a departed contact"
+      },
+      {
+        "key": "warm",
+        "value": 0.0,
+        "detail": "cold"
+      }
     ],
-    "enriched": { "full_name": "Mark Feld", "title": "(left — now VP @ another co)", "company": { "name": "CompanyX" }, "work_email": { "email": "—", "status": "UNDELIVERABLE" } },
-    "drafts": []
+    "enriched": {
+      "full_name": "Mark Feld",
+      "title": "(left \u2014 now VP @ another co)",
+      "company": {
+        "name": "CompanyX"
+      },
+      "work_email": {
+        "email": "\u2014",
+        "status": "UNDELIVERABLE"
+      }
+    },
+    "drafts": [],
+    "evidence": [
+      {
+        "check": "person_in_role",
+        "source": "fullenrich",
+        "result": "fail",
+        "detail": "is_current_role FALSE \u2014 left CompanyX in March, now VP elsewhere"
+      },
+      {
+        "check": "signal_freshness",
+        "source": "sillage",
+        "result": "inconclusive",
+        "detail": "intent surge attributed to a departed contact \u2014 chasing a ghost"
+      }
+    ]
   },
   {
     "signal_id": "sig_outicp_01",
     "score": 5,
-    "rank_reason": "Real, current, and active — but a 12-person agency, well outside your enterprise ICP. Not worth a touch.",
+    "rank_reason": "Real, current, and active \u2014 but a 12-person agency, well outside your enterprise ICP. Not worth a touch.",
     "factors": [
-      { "key": "real", "value": 1.0, "detail": "person confirmed current" },
-      { "key": "icp_fit", "value": 0.05, "detail": "12 employees — fails the ICP size floor" },
-      { "key": "urgent", "value": 0.6, "detail": "recent keyword mention" },
-      { "key": "warm", "value": 0.0, "detail": "cold" }
+      {
+        "key": "real",
+        "value": 1.0,
+        "detail": "person confirmed current"
+      },
+      {
+        "key": "icp_fit",
+        "value": 0.05,
+        "detail": "12 employees \u2014 fails the ICP size floor"
+      },
+      {
+        "key": "urgent",
+        "value": 0.6,
+        "detail": "recent keyword mention"
+      },
+      {
+        "key": "warm",
+        "value": 0.0,
+        "detail": "cold"
+      }
     ],
-    "enriched": { "full_name": "Lena Ford", "title": "Founder", "company": { "name": "Ford & Co" }, "work_email": { "email": "lena@fordco.studio", "status": "DELIVERABLE" } },
+    "enriched": {
+      "full_name": "Lena Ford",
+      "title": "Founder",
+      "company": {
+        "name": "Ford & Co"
+      },
+      "work_email": {
+        "email": "lena@fordco.studio",
+        "status": "DELIVERABLE"
+      }
+    },
     "drafts": []
   }
 ]

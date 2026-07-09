@@ -10,6 +10,7 @@ type Prospect = {
   rank_reason: string;
   why_now?: { trigger: string; what_changed: string; why_buying: string };
   factors: Factor[];
+  evidence?: { check: string; source: string; result: string; detail: string }[];
   enriched?: { full_name?: string; title?: string; company?: { name?: string }; work_email?: { email: string; status: string }; mobile?: { number: string } };
   warm_path?: { via: string; relationship: string };
   drafts: Draft[];
@@ -181,6 +182,15 @@ export default function Dashboard() {
                       <span className="factor" key={f.key} title={f.detail}>{f.key} <b className={`pips ${f.value >= 0.75 ? "on" : ""}`}>{pips(f.value)}</b></span>
                     ))}
                   </div>
+                  <details className="proof">
+                    <summary>proof · the evidence behind the score</summary>
+                    {p.factors.map((f) => (
+                      <div key={f.key}><b>{f.key}</b> {f.detail}</div>
+                    ))}
+                    {p.evidence?.map((ev, i) => (
+                      <div key={`e${i}`}><b>{ev.check}</b> <i>({ev.source} · {ev.result})</i> {ev.detail}</div>
+                    ))}
+                  </details>
                   <div className="contact">
                     {e?.work_email && <span>✉ {e.work_email.email} {e.work_email.status === "DELIVERABLE" && <b className="verified">✓</b>}</span>}
                     {e?.mobile && <span>☎ {e.mobile.number}</span>}

@@ -91,6 +91,12 @@ a:hover { color: var(--muted); }
 .warm { font-family: var(--font-mono); font-size: 12px; color: var(--hot); margin-bottom: 14px; }
 .whynow { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin: 0 0 14px; display: grid; gap: 3px; border-left: 2px solid var(--border); padding-left: 12px; }
 .whynow .wl { color: var(--faint); display: inline-block; width: 60px; text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.06em; }
+.proof { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin: 0 0 14px; }
+.proof summary { cursor: pointer; color: var(--faint); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; user-select: none; }
+.proof summary:hover { color: var(--muted); }
+.proof > div { padding: 4px 0 0 12px; line-height: 1.4; }
+.proof b { color: var(--fg); font-weight: 500; text-transform: uppercase; font-size: 10px; margin-right: 4px; }
+.proof i { color: var(--faint); font-style: normal; }
 
 /* Drafts */
 .drafts { background: var(--subtle); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; margin: 4px 0 16px; }
