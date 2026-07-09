@@ -1,43 +1,94 @@
-# Litmus
+# 🧪 Litmus — the scoring layer for intent
 
-**Litmus is the scoring layer for intent.** It reviews Sillage's signal firehose, scores and ranks what to act on with cited reasoning, enriches the contact, drafts the outreach, and fires it multi-channel — into whatever destination you already use.
+**Turns your intent firehose into 3 leads to work this morning — with proof.**
 
-Built for the Station F Agentic GTM Hackathon (Thu Jul 9). Track 1 — Acquisition. Sponsors: Claude Startups (Anthropic), FullEnrich, Sillage.
+Built at the **Agentic GTM Hackathon** (Anthropic × FullEnrich × Sillage, Station F, Jul 2026) · Track 1: Acquisition.
+🔗 **Live demo:** https://litmus-roan.vercel.app · 📺 Demo video: _(link)_ · 💻 One engine, four doors: dashboard · Slack · CLI · MCP.
 
-## The pitch
+---
 
-**Problem.** Sillage surfaces a *lot* of intent. That's the point — and the problem. A rep opens a firehose of signals every morning and has no principled way to decide which five accounts to work, why, or how to reach them. Everyone sells more signals; nobody tells you which ones matter.
+## The problem
 
-**Solution.** Litmus is the brain in the middle of the GTM stack. It scores every signal on real, warm, urgent, and ICP-fit, ranks them into a worklist with a cited reason for each, enriches the top contacts to reachable email + phone, drafts personal outreach, and sends it across email and LinkedIn. Destination-agnostic: the output lands in HubSpot, Salesforce, Slack, or a dashboard.
+Sales reps drown in signals. Sillage surfaces intent, FullEnrich cleans the data — but a rep still opens a firehose of "hot" accounts every morning with **no principled way to know which to work, why, or whether the signal is even true.** Intent data runs **31–47% false positives**, CRM data rots **15–20% per quarter**, and 35–45% of buyers are remote (so IP-based attribution is broken). Everyone sells *more signals*. Nobody checks them.
 
-**Why it's not glue.** Everything except the scoring is a commodity connection. The score + the reasoning (Anthropic) is the proprietary part. That's what the demo shows its work on.
+## What Litmus does
 
-## The pipeline
+Litmus is the brain in the middle of the GTM stack. It scores the firehose against **what you actually sell**, ranks it, explains itself, and acts.
 
 ```
-CRM (HubSpot/Salesforce) ─▶ SILLAGE ─▶ FULLENRICH ─▶ LITMUS SCORE ─▶ ACTION ─▶ OUTPUT
-   provides accounts       intent      phone+email   Anthropic:       Unipile:   agnostic sink:
-   to watch                firehose    (reachable)   score+rank+why   LinkedIn   HubSpot / SF /
-                                                      (the IP)         + email    Slack / dashboard
+CRM / Sillage / FullEnrich ─▶ normalize ─▶ [ LITMUS.md scoring + why-now ] ─▶ signal-aware dedup ─▶
+   8,432 scouted                             (Anthropic agent loop)              20 hot → 3 PRIME
+        │                                                                              │
+        └──────────────────────── verify against FullEnrich ground truth ─────────────┘
+                                                                                       ▼
+                       drafts (email · telegram · linkedin · xAI voice call) ─▶ approve ─▶ send (Unipile) ─▶ 👍/👎 tunes next run
 ```
 
-1. **Sillage (MCP)** streams intent signals for the accounts you watch.
-2. **FullEnrich** turns a matched person into a reachable contact (verified email + mobile).
-3. **Litmus scores** every signal — real · warm · urgent · ICP-fit — into a 0-100 rank with a cited reason (Anthropic).
-4. **Unipile** sends the drafted email + LinkedIn message on behalf of the rep.
-5. **Output** is rendered into any sink: Slack (demo), HubSpot / Salesforce (adapter), or the dashboard.
+**8,432 scouted → 312 verified reachable → 20 hot → 3 PRIME.** Each PRIME lead ships with:
+- a **litmus reading** — 🧪 ACID (reactive, act now) vs BASE (inert, skip), the score as pH;
+- a pinpointed **why-now** — the trigger, what materially changed, why they'll buy;
+- a cited **evidence chain** you can open on the card;
+- ready **drafts** for email, Telegram, LinkedIn, and a phone/voice-call script.
 
-## Sponsor / tool fit (all load-bearing)
+## How the scoring works (the defensible part)
 
-- **Sillage** — the intent source. We consume the firehose and make it a ranked worklist.
-- **FullEnrich** — reachability: verified email + phone so a scored account is actionable.
-- **Claude (Anthropic)** — the scoring + reasoning engine. The differentiator, not orchestration decoration.
-- **Unipile** — the action layer: one API, email + LinkedIn, on behalf of the rep.
+Litmus uses the industry-standard **fit × intent × timing** lead-scoring framework — with two research-backed upgrades that cut false positives the most.
 
-## Repo
+| Factor | What it asks | Source |
+|---|---|---|
+| `icp_fit` | **fit** — do they match what you sell? (rules-encoded ICP) | client context + firmographics |
+| `urgent` | **intent + timing** — is now the moment? (intent decays in ~30 days) | signal type + freshness |
+| `warm` | do we have a way in? | relationship graph + Sillage warm signals |
+| `real` | **the verification gate** — is this a live, true opportunity? | **FullEnrich ground truth** |
 
-- `ARCHITECTURE.md` — the scoring pipeline, schema, and design decisions.
-- `BUILD_PLAN.md` — hour-by-hour, guaranteed vs stretch, roles.
-- `WORKFLOW.md` — how the three of us push to this repo without stepping on each other.
-- `mock/` — Sillage-shaped signals + seeded relationships to build against before live data.
-- `src/` — stubs: Sillage/FullEnrich/Unipile clients, the score engine, the agnostic output sinks.
+**Composite (deterministic, auditable):** `score = 100 · real · icp_fit · (0.4 + 0.35·urgent + 0.25·warm)`
+
+- **Upgrade 1 — the gate.** `real` and `icp_fit` *multiply*: a dead or out-of-ICP lead scores ~0 no matter how hot the signal. This is the research prescription — *require multiple independent positive signals before flagging an account* — enforced in math, not vibes.
+- **Upgrade 2 — verification on ground truth.** The `real` factor verifies the person against FullEnrich *before* anything scores high, instead of scoring rotten CRM data. **The independence rule:** Sillage can never verify a Sillage signal — FullEnrich is the outside witness.
+- **Not a black box.** The model scores four factors, each citing its exact field; the composite is computed in code by a fixed formula; every card carries the why-now and evidence chain.
+
+> **FullEnrich makes your data true. Litmus makes it actionable.**
+
+## The money moment (live, on real data)
+
+Sillage fires a promotion signal — *"VP Sales → SVP Sales at Ramp."* Looks hot. Litmus verifies it against FullEnrich — **the SVP title isn't confirmed.** Score: **11.** We don't let the rep chase it, and we show the proof. *Verify, don't trust.*
+
+## Architecture — one headless engine, four doors
+
+The scoring engine is pure functions (`lib/`, `src/`). Every surface is a thin door over the same engine:
+- **Dashboard** (Next.js on Vercel) — the morning brief, the filter animation, approve & send, the eval loop.
+- **Slack** — the brief delivered to a per-rep channel via the Web API.
+- **CLI** — `npm run cli -- brief` prints the ranked brief in the terminal (colors, litmus verdicts).
+- **MCP server** — `litmus_todays_brief` / `litmus_score_contact`; any agent (Claude, xAI Voice) can call Litmus as a tool.
+
+## Sponsors & tools — all load-bearing
+
+- **Anthropic (Claude)** — the agent loop: triages the batch, spends enrichment credits only on plausible winners, verifies, emits ranked with cited evidence. Scoring model: `claude-sonnet-5`.
+- **FullEnrich** — three surfaces: the people database (search), enrichment (verified email/phone), and the **independent verification gate**. Reverse-email as a bonus flow.
+- **Sillage** — intent signals via MCP (Bearer key, no OAuth). We seed the workspace and pull real detections.
+- **Unipile** — multi-channel send (email + LinkedIn + Telegram), tested live, behind a hard safety gate.
+- **xAI Grok Voice** — the voice channel: a Grok voice agent calls the Litmus MCP to brief the rep or place a call.
+
+## Feedback loop (it learns)
+
+The review step rates the **lead** and the **message** (👍/👎 + structured reason chips — research-backed for higher-quality learning signal). Ratings write to `feedback.jsonl` and are injected into the scoring prompt as few-shot. Declined leads go quiet via a **signal-aware suppression ledger** — a lead only resurfaces if its job/company/signal actually changed.
+
+## Run it locally
+
+```bash
+npm install
+cp .env.example .env          # add ANTHROPIC_API_KEY, FULLENRICH_API_KEY, SILLAGE_API_KEY (+ optional Unipile/Slack/HubSpot)
+npm run dev                   # http://localhost:3000
+npm run cli -- brief --source sillage-agent --top 5   # the terminal door
+npm run mcp                   # the MCP door (stdio)
+```
+
+Litmus works with **any** of its sources — connect all for the sharpest scoring, or run CRM/CSV-only. Anthropic runs the scoring server-side (users never bring an AI key).
+
+## Repo map
+
+`LITMUS.md` — the scoring prompt (the IP) · `lib/agent-loop.ts` — the agent · `lib/pipeline.ts` — the flows · `src/` — clients (Sillage, FullEnrich, Unipile, HubSpot) + engine · `app/` — the dashboard · `bin/` — CLI + MCP · `ARCHITECTURE.md`, `CONTEXT.md`, `WORKFLOW.md` — docs.
+
+## Team
+
+Oscar · Pierre · Desiree — Station F, July 2026.
