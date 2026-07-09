@@ -1,4 +1,4 @@
-# 🧪 Litmus — the scoring layer for intent
+# 🧪 Litmus — the scoring layer for leads
 
 **Turns your intent firehose into 3 leads to work this morning — with proof.**
 
@@ -32,26 +32,27 @@ CRM / Sillage / FullEnrich ─▶ normalize ─▶ [ LITMUS.md scoring + why-now
 
 ## How the scoring works (the defensible part)
 
-Litmus uses the industry-standard **fit × intent × timing** lead-scoring framework — with two research-backed upgrades that cut false positives the most.
+Litmus uses a **fit × way-in** lead-scoring framework built for a real-time signal feed — with two research-backed upgrades that cut false positives the most.
 
 | Factor | What it asks | Source |
 |---|---|---|
 | `icp_fit` | **fit** — do they match what you sell? (rules-encoded ICP) | client context + firmographics |
-| `urgent` | **intent + timing** — is now the moment? (intent decays in ~30 days) | signal type + freshness |
-| `warm` | do we have a way in? | relationship graph + Sillage warm signals |
+| `warm` | **way-in + signal strength** — do we have a path, and how strong is the signal behind it? | relationship graph + Sillage signal type + corroboration |
 | `real` | **the verification gate** — is this a live, true opportunity? | **FullEnrich ground truth** |
 
-**Composite (deterministic, auditable):** `score = 100 · real · icp_fit · (0.4 + 0.35·urgent + 0.25·warm)`
+`warm` is a composite the model blends and cites: `0.55·relationship_edge + 0.30·signal_strength + 0.15·corroboration` — the way in, how strong a signal Sillage surfaced (competitor move > champion move > job change > keyword > thin engagement), and how many independent signals stack. We deliberately dropped a standalone `urgent`/recency factor: Sillage surfaces signals within a day, so freshness is a constant that can't rank leads — what discriminates is signal strength and whether we have a way in.
+
+**Composite (deterministic, auditable):** `score = 100 · real · icp_fit · (0.4 + 0.6·warm)`
 
 - **Upgrade 1 — the gate.** `real` and `icp_fit` *multiply*: a dead or out-of-ICP lead scores ~0 no matter how hot the signal. This is the research prescription — *require multiple independent positive signals before flagging an account* — enforced in math, not vibes.
 - **Upgrade 2 — verification on ground truth.** The `real` factor verifies the person against FullEnrich *before* anything scores high, instead of scoring rotten CRM data. **The independence rule:** Sillage can never verify a Sillage signal — FullEnrich is the outside witness.
-- **Not a black box.** The model scores four factors, each citing its exact field; the composite is computed in code by a fixed formula; every card carries the why-now and evidence chain.
+- **Not a black box.** The model scores three factors, each citing its exact field; the composite is computed in code by a fixed formula; every card carries the why-now and evidence chain.
 
 > **FullEnrich makes your data true. Litmus makes it actionable.**
 
 ## The money moment (live, on real data)
 
-Sillage fires a promotion signal — *"VP Sales → SVP Sales at Northwind."* Looks hot. Litmus verifies it against FullEnrich — **the SVP title isn't confirmed.** Score: **11.** We don't let the rep chase it, and we show the proof. *Verify, don't trust.*
+Sillage fires a promotion signal — *"VP Sales → SVP Sales at Northwind."* Looks hot. Litmus verifies it against FullEnrich — **the SVP promotion isn't confirmed,** so `real` = 0 and the gate zeroes the composite. Score: **0 — killed.** We don't let the rep chase it, and we show the proof. *Verify, don't trust.*
 
 ## Architecture — one headless engine, four doors
 
