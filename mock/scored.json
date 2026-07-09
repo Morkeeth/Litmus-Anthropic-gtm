@@ -3,6 +3,7 @@
     "signal_id": "sig_champion_01",
     "score": 92,
     "rank_reason": "The VP Eng who championed you at Notion just landed at Ramp six weeks ago — squarely in-ICP, and warm through Marie.",
+    "why_now": { "trigger": "Started as VP Engineering at Ramp 6 weeks ago", "what_changed": "A past champion who drove your Notion deal now holds a buying seat at an ICP account", "why_buying": "New leaders re-tool in their first 90 days — and this one already knows your product works" },
     "factors": [
       { "key": "real", "value": 1.0, "detail": "FullEnrich: is_current_role true, VP Engineering @ ramp.com, started 2026-05-26" },
       { "key": "icp_fit", "value": 1.0, "detail": "fintech, 500-1000, VP Eng persona — matches ICP" },
@@ -20,6 +21,7 @@
     "signal_id": "sig_funding_01",
     "score": 81,
     "rank_reason": "Series B closed Tuesday and they just opened four GTM roles — buying window is open now, but you have no path in.",
+    "why_now": { "trigger": "Series B closed 2 days ago + 4 GTM roles opened in 60 days", "what_changed": "Fresh capital and a hiring wave mean the RevOps stack is being built right now", "why_buying": "Scaling GTM headcount that fast breaks spreadsheet forecasting — your exact wedge, before the tooling is chosen" },
     "factors": [
       { "key": "real", "value": 1.0, "detail": "FullEnrich: Head of RevOps confirmed current @ layerhq.com" },
       { "key": "icp_fit", "value": 0.9, "detail": "B2B SaaS, post-Series-B, RevOps persona — strong fit" },
@@ -36,6 +38,7 @@
     "signal_id": "sig_intent_01",
     "score": 68,
     "rank_reason": "Their whole team has been reading category content for two weeks — real interest, real buyer, but only one signal so far.",
+    "why_now": { "trigger": "Multiple team members engaged category content across two weeks", "what_changed": "Sustained research interest — but no hard buying trigger (funding, hire, migration) yet", "why_buying": "Active research means early evaluation; worth a light, insight-led touch now, not a hard pitch" },
     "factors": [
       { "key": "real", "value": 1.0, "detail": "FullEnrich: Director of Sales Ops confirmed current" },
       { "key": "icp_fit", "value": 0.85, "detail": "mid-market SaaS, SalesOps persona — good fit" },

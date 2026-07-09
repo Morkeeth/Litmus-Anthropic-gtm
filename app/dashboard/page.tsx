@@ -8,6 +8,7 @@ type Prospect = {
   signal_id: string;
   score: number;
   rank_reason: string;
+  why_now?: { trigger: string; what_changed: string; why_buying: string };
   factors: Factor[];
   enriched?: { full_name?: string; title?: string; company?: { name?: string }; work_email?: { email: string; status: string }; mobile?: { number: string } };
   warm_path?: { via: string; relationship: string };
@@ -160,6 +161,13 @@ export default function Dashboard() {
                 <div>
                   <div className="who">{e?.full_name ?? "Unknown"} · {e?.title ?? ""}{e?.company?.name ? ` · ${e.company.name}` : ""}</div>
                   <h2 className="reason">{p.rank_reason}</h2>
+                  {p.why_now && (
+                    <div className="whynow">
+                      <div><span className="wl">Trigger</span> {p.why_now.trigger}</div>
+                      <div><span className="wl">Changed</span> {p.why_now.what_changed}</div>
+                      <div><span className="wl">Why now</span> {p.why_now.why_buying}</div>
+                    </div>
+                  )}
                   <div className="factors">
                     {p.factors.map((f) => (
                       <span className="factor" key={f.key} title={f.detail}>{f.key} <b className={`pips ${f.value >= 0.75 ? "on" : ""}`}>{pips(f.value)}</b></span>

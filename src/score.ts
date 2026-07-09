@@ -50,6 +50,15 @@ const EMIT_TOOL: Anthropic.Tool = {
     type: "object",
     properties: {
       rank_reason: { type: "string" },
+      why_now: {
+        type: "object",
+        properties: {
+          trigger: { type: "string" },
+          what_changed: { type: "string" },
+          why_buying: { type: "string" },
+        },
+        required: ["trigger", "what_changed", "why_buying"],
+      },
       factors: {
         type: "array",
         items: {
@@ -88,7 +97,7 @@ const EMIT_TOOL: Anthropic.Tool = {
         },
       },
     },
-    required: ["rank_reason", "factors", "drafts", "evidence"],
+    required: ["rank_reason", "why_now", "factors", "drafts", "evidence"],
   },
 };
 
@@ -121,6 +130,7 @@ export async function scoreSignal(input: ScoreInput, cfg: ScoreConfig): Promise<
     signal_type: input.signal.type,
     detected_at: input.signal.detected_at,
     rank_reason: out.rank_reason ?? "",
+    why_now: out.why_now,
     factors,
     enriched: input.enriched,
     warm_path: warm ?? undefined,

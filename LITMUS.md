@@ -57,6 +57,16 @@ So a dead signal (`real=0`) or an out-of-ICP prospect (`icp_fit=0`) scores ~0 no
 
 Write the single sentence a rep reads to decide. Lead with why-now and the fit, name the evidence. Example: *"VP Eng who championed you at Acme just landed at Stripe six weeks ago — in-ICP, warm via Marie."* Never generic.
 
+### Why now — PINPOINT it (`why_now`)
+
+A rep drowns in thin signals: "clicked a link", "opened the newsletter", "visited pricing". That alone is not a reason to call. Your job is to say *why this account is interesting RIGHT NOW*, concretely. Fill three parts:
+
+- `trigger` — the specific event, with specifics: "opened pricing 3× this week", "VP Sales role started 3 weeks ago", "posted about switching CRMs".
+- `what_changed` — what is materially different now vs a month ago: "new GTM leader who buys tools like ours", "just raised a Series B", "hiring 4 SDRs", "champion moved into a buying seat". Use the enriched employment history and company data to FIND the change behind a thin signal.
+- `why_buying` — why that change means they are likely in-market for what THIS seller offers.
+
+Rules: never restate the raw signal as the reason ("they clicked" is not a why). If the only thing you have is a thin engagement and nothing corroborates it, say so plainly, set `urgent` low, and let the score reflect that there is no real trigger yet. A specific, defensible why-now is the whole product.
+
 ### The drafts
 
 Write two, in the seller's tone of voice (from CLIENT CONTEXT):
@@ -76,6 +86,7 @@ The rep has approved/rejected past outputs. Apply the pattern; do not repeat rej
 {
   "score": 0,
   "rank_reason": "one sentence",
+  "why_now": { "trigger": "...", "what_changed": "...", "why_buying": "..." },
   "factors": [
     { "key": "real",    "value": 0.0, "detail": "cited field/evidence" },
     { "key": "icp_fit", "value": 0.0, "detail": "which ICP criterion" },

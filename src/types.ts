@@ -54,6 +54,13 @@ export interface ScoreFactor {
   detail: string; // the exact field / edge that drove it (for the evidence chain)
 }
 
+// Turns a thin signal ("clicked a newsletter") into a concrete reason to act now.
+export interface WhyNow {
+  trigger: string; // the specific event/signal — "opened pricing 3x this week", "VP Sales started 3 weeks ago"
+  what_changed: string; // what is materially different now vs before — "new GTM leader", "just raised Series B"
+  why_buying: string; // why that change implies buying readiness for THIS seller
+}
+
 export interface WarmPath {
   via: string;
   relationship: string;
@@ -94,6 +101,7 @@ export interface ScoredSignal {
   signal_type?: string; // carried for the suppression ledger (detect signal change)
   detected_at?: string; // carried for the suppression ledger (detect fresher signal)
   rank_reason: string; // the one sentence a rep reads — written by the model
+  why_now?: WhyNow; // the pinpointed reason this account is interesting RIGHT NOW
   factors: ScoreFactor[];
   enriched?: EnrichedContact;
   warm_path?: WarmPath;
