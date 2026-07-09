@@ -1,0 +1,39 @@
+{
+  "label": "timing",
+  "avg": 96,
+  "avgBy": {
+    "contract": 25,
+    "calibration": 25,
+    "triage": 15,
+    "why_now": 17,
+    "batch_judgment": 14
+  },
+  "grades": [
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 17,
+        "batch_judgment": 14
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 96,
+      "totalMax": 100,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strong overall: each why_now is concrete (exact dates, tenure math, role transitions) and what_changed avoids restating the raw signal, correctly using enrichment (e.g., Elena Ruiz's new-CRO reevaluation logic, Priya's RevOps stack-audit inference flagged as inference not fact). The Vanta kill is exemplary — catching is_current_role:false despite a fresh-looking date. Thin signals are handled honestly: the newsletter click and bakery/student rows are explicitly called out as non-triggers rather than dressed up, with urgent scores near zero. Minor deduction: Priya's why_buying leans on a generic \"new leaders audit tools\" pattern without much account-specific texture, and Miles Fenwick's why_buying is fairly formulaic. Batch judgment is excellent — the two Northwind signals are correctly recognized as one account story with Miles's SVP+hiring flag correctly outranking Dana's VP promo, deferred rather than duplicated; top rows are diverse (Attio, Northwind, Clay, Braze) rather than monoculture; rank_reasons are comparative and decisive (\"ahead of Sam's thin signal, behind the two confirmed leaders\"); drafts stay within seller_context claims (Attio case study, HubSpot/Slack not overclaimed) with no fabricated shared history beyond the given warm_path.</notes>\n</invoke>\n"
+    }
+  ]
+}

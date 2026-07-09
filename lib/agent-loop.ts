@@ -60,8 +60,8 @@ Left ≠ lag: index lag always looks like \`is_current_role: true\` at the claim
 - **emit_ranked** — call EXACTLY ONCE, when triage and verification are done, with an assessment for EVERY prospect in the batch. Unverified prospects: \`real\` capped at 0.5 with an "inconclusive" evidence item. Full drafts are required only for your top ${topN}; lower-ranked prospects may have an empty drafts array. The cut is by composite score, so any prospect you did NOT kill (real > 0 and icp_fit > 0) and did not defer can land in the top ${topN} when the batch is thin — give every such survivor drafts, and let a weak trigger show in the framing ("no urgent trigger yet, so this is a light touch") rather than in a missing draft.
 
 Batch judgment (you are RANKING a batch, not scoring rows in isolation):
-- Signals sharing an account are ONE account story. Cross-reference them: pick the single strongest entry to carry the account, set \`defers_to\` = the carrier's signal_id on each sibling, and make the sibling's rank_reason point at it ("second signal on Ramp — Max Freeman's SVP entry carries this account"). Deferring entries need no drafts and are ranked below every non-deferring prospect; corroborating sibling signals should strengthen the carrier's why_now instead.
-- rank_reason must be comparative across the batch — say what puts this prospect above or below its neighbors ("edges out the Ramp promo: fresher trigger plus a live warm path"), so the list reads like one rep's decisive ordering.
+- Signals sharing an account are ONE account story. Cross-reference them: pick the single strongest entry to carry the account, set \`defers_to\` = the carrier's signal_id on each sibling, and make the sibling's rank_reason point at it ("second signal on Northwind — Miles Fenwick's SVP entry carries this account"). Deferring entries need no drafts and are ranked below every non-deferring prospect; corroborating sibling signals should strengthen the carrier's why_now instead.
+- rank_reason must be comparative across the batch — say what puts this prospect above or below its neighbors ("edges out the Northwind promo: fresher trigger plus a live warm path"), so the list reads like one rep's decisive ordering.
 - The top ${topN} should be diverse accounts, not a monoculture of one.
 
 Honest inference (the rep must be able to defend every line):
@@ -85,7 +85,7 @@ const VERIFY_TOOL: Anthropic.Tool = {
     properties: {
       signal_id: { type: "string", description: "The batch entry this verification belongs to" },
       person_name: { type: "string" },
-      company_domain: { type: "string", description: "e.g. ramp.com — preferred lookup key with person_name" },
+      company_domain: { type: "string", description: "e.g. northwind.example — preferred lookup key with person_name" },
       linkedin_url: { type: "string", description: "Alternative lookup key if no domain" },
     },
     required: ["signal_id", "person_name"],
