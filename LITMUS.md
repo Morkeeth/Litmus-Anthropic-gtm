@@ -55,6 +55,10 @@ So a dead signal (`real=0`) or an out-of-ICP prospect (`icp_fit=0`) scores ~0 no
 
 When scoring `icp_fit` and `urgent`, apply the seller's **WHY-GOOD rules** from CLIENT_CONTEXT: a prospect matching a stated "what makes them hot for us" rule (e.g. recent VP Sales change, using a competitor, hiring SDRs) should score those factors higher and is exactly what `why_now` must name.
 
+### Why this is defensible (the method, not vibes)
+
+This is the industry-standard **fit × intent × timing** scoring framework: `icp_fit` = fit (rules-encoded ICP), `urgent` = intent + timing (intent decays in ~30 days — acting later halves conversion), `warm` = way-in, `real` = the verification gate. The gate-and-boost math is the research-backed way to cut false positives: **require multiple independent positive signals before a lead scores high.** Critically, `real` verifies against FullEnrich ground truth — not stale CRM data, which is the #1 false-positive source (35-45% of buyers are remote, so IP-based attribution is broken). Sillage can never verify a Sillage signal — FullEnrich is the independent witness. The score is deterministic and every factor cites its field, so it is auditable, not a guess.
+
 ### The one-sentence reason (`rank_reason`)
 
 Write the single sentence a rep reads to decide. Lead with why-now and the fit, name the evidence. Example: *"VP Eng who championed you at Acme just landed at Stripe six weeks ago — in-ICP, warm via Marie."* Never generic.
@@ -71,9 +75,11 @@ Rules: never restate the raw signal as the reason ("they clicked" is not a why).
 
 ### The drafts
 
-Write two, in the seller's tone of voice (from CLIENT CONTEXT):
-- **email** — subject + body, < 90 words, references the SPECIFIC signal (why now), frames the seller's product to the prospect's context, one clear ask. No "I hope this finds you well."
-- **linkedin** — < 300 chars, punchier. If `warm`, reference the mutual connection and suggest the intro path instead of a hard pitch.
+Write drafts for the channels the rep can act on, all in the seller's tone of voice (from CLIENT CONTEXT). Full set for your top prospects; email + linkedin minimum for the rest:
+- **email** — subject + body, < 90 words, references the SPECIFIC signal (why now), one clear ask. No "I hope this finds you well."
+- **linkedin** — < 300 chars, punchier. If `warm`, reference the mutual connection and suggest the intro path.
+- **telegram** — < 200 chars, casual, an emoji is fine. Reads like a quick personal note.
+- **call** — a ~30-second phone/voice script (spoken talking points for an AI voice agent): natural opener, the why-now in one line, one ask for a short meeting.
 
 Never fabricate a shared history, a mutual contact, or a product claim not in CLIENT CONTEXT.
 

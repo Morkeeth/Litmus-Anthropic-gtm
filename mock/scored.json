@@ -57,6 +57,14 @@
       {
         "channel": "linkedin",
         "body": "Congrats on Ramp, Sarah. Marie and I were just talking about you \u2014 same problem we solved at Notion is probably on your desk again. Quick catch-up?"
+      },
+      {
+        "channel": "telegram",
+        "body": "Sarah! Congrats on Ramp \ud83c\udf89 Marie said you'd landed there. Same rollout we cracked at Notion is probably back on your plate \u2014 worth a quick call this week?"
+      },
+      {
+        "channel": "call",
+        "body": "Hi Sarah, congrats on the Ramp move \u2014 Marie spoke highly of you. When we worked together at Notion you drove exactly this kind of rollout; I'd love 15 minutes before Q3 planning locks to show you what's changed. Does Thursday work?"
       }
     ],
     "evidence": [
@@ -134,6 +142,14 @@
       {
         "channel": "linkedin",
         "body": "Congrats on the Series B, Tomas. Scaling GTM headcount that fast is where forecasting quietly breaks \u2014 happy to share how a similar team handled it."
+      },
+      {
+        "channel": "telegram",
+        "body": "Tomas \u2014 congrats on the Series B \ud83d\ude80 Four GTM hires in 60 days usually means the ops layer is about to buckle. Worth a look before the new folks start?"
+      },
+      {
+        "channel": "call",
+        "body": "Hi Tomas, congrats on the raise. Scaling GTM headcount this fast is where forecasting quietly breaks \u2014 we took a Series-B team from spreadsheets to a clean pipeline in three weeks. Could I grab 15 minutes before your new hires start?"
       }
     ],
     "evidence": [

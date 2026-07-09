@@ -76,7 +76,7 @@ const EMIT_TOOL: Anthropic.Tool = {
         items: {
           type: "object",
           properties: {
-            channel: { type: "string", enum: ["email", "linkedin"] },
+            channel: { type: "string", enum: ["email", "linkedin", "telegram", "call"] },
             subject: { type: "string" },
             body: { type: "string" },
           },

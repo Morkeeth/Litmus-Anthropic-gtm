@@ -127,6 +127,14 @@ export default function Dashboard() {
 
   function openEval(p: Prospect) { setEvalFor(p); setEvalLead({ reason: "" }); setEvalMsg({ reason: "" }); }
 
+  const [calling, setCalling] = useState<string | null>(null);
+  async function callVoice(p: Prospect) {
+    setCalling(p.signal_id);
+    // Demo: hand the scored context + call script to the Grok Voice agent (xAI). Real call is SIP + approval.
+    const script = p.drafts?.find((d) => d.channel === "call")?.body ?? p.why_now?.trigger ?? p.rank_reason;
+    setTimeout(() => { alert(`📞 xAI Voice agent briefed for ${p.enriched?.full_name}:\n\n"${script}"\n\n(demo — real call places over SIP with an approval gate)`); setCalling(null); }, 700);
+  }
+
   async function submitEval() {
     const p = evalFor!;
     await fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -229,11 +237,14 @@ export default function Dashboard() {
                   )}
                   <div className="actions">
                     {st === "sent" ? (
-                      <button className="sent" disabled>✓ sent · email + linkedin</button>
+                      <button className="sent" disabled>✓ sent</button>
                     ) : (
                       <>
-                        <button className="primary" onClick={() => act(p, "up")}>Approve & send →</button>
-                        <button className="ghost" onClick={() => openEval(p)}>Rate & improve</button>
+                        <button className="primary" onClick={() => act(p, "up")}>✉ Email</button>
+                        <button className="ghost" onClick={() => act(p, "up")}>💬 Telegram</button>
+                        <button className="ghost" onClick={() => act(p, "up")}>🔗 LinkedIn</button>
+                        <button className="ghost" onClick={() => callVoice(p)} disabled={calling === p.signal_id}>{calling === p.signal_id ? "☎ dialing…" : "📞 Call · xAI Voice"}</button>
+                        <button className="ghost" onClick={() => openEval(p)}>Rate</button>
                       </>
                     )}
                   </div>
