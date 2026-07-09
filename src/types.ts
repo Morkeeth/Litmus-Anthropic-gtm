@@ -65,6 +65,27 @@ export interface Draft {
   channel: "email" | "linkedin";
   subject?: string; // email only
   body: string;
+  approved?: boolean; // set by the rep's thumbs up/down before send (human gate)
+}
+
+// Set up ONCE in onboarding. Grounds icp_fit scoring + the drafts. Injected into LITMUS.md.
+export interface ClientContext {
+  what_we_sell: string;
+  icp: string; // company + personas + disqualifiers
+  competitors?: string;
+  proof_assets?: string; // case studies, integrations, logos
+  tone_of_voice: string;
+  outreach_approach?: string;
+  example_that_worked?: string;
+}
+
+// Feedback event — feeds the learning loop. Recent ones become few-shot in LITMUS.md.
+export interface Feedback {
+  signal_id: string;
+  kind: "output_eval" | "client_reply"; // rep thumbs vs prospect actually replied
+  verdict: "up" | "down";
+  reason?: string; // the attribution label that tunes the prompt
+  at: string;
 }
 
 export interface ScoredSignal {

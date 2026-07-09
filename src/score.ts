@@ -20,27 +20,36 @@
 //
 // TODO Thursday: implement with @anthropic-ai/sdk, structured outputs, Fable model.
 
-import type { Signal, EnrichedContact, ScoredSignal } from "./types";
+import type { Signal, EnrichedContact, ScoredSignal, ClientContext, Feedback } from "./types";
 import { lookupRelationship } from "./relationship";
 
 export interface ScoreInput {
   signal: Signal;
   enriched?: EnrichedContact;
-  // curated account context for the reasoning step (aggregated Sillage signals, summaries)
-  accountContext?: string;
+  accountContext?: string; // curated aggregate of the account's Sillage signals, for reasoning
 }
 
-export async function scoreSignal(_input: ScoreInput): Promise<ScoredSignal> {
-  // 1. deterministic factor extraction (real / urgent / icp_fit from fields; warm from lookupRelationship)
-  // 2. Claude/Fable call: given canonical facts + curated context, emit
-  //    { score, rank_reason, drafts[email,linkedin], evidence[] } as structured JSON
-  // 3. return ScoredSignal
+export interface ScoreConfig {
+  clientContext: ClientContext; // set once — grounds icp_fit + drafts (LITMUS.md {{CLIENT_CONTEXT}})
+  feedbackExamples?: Feedback[]; // recent 👍/👎 + reasons -> few-shot ({{FEEDBACK_EXAMPLES}})
+  topN?: number; // filter the worklist — default 5-10, never dump everything
+}
+
+// Loads LITMUS.md, fills the {{...}} slots, calls Fable with structured output.
+export async function scoreSignal(_input: ScoreInput, _cfg: ScoreConfig): Promise<ScoredSignal> {
+  // 1. deterministic factor extraction (real/urgent/icp_fit from fields; warm via lookupRelationship)
+  // 2. render LITMUS.md with CLIENT_CONTEXT + SIGNAL + ENRICHED + WARM_PATH + FEEDBACK_EXAMPLES
+  // 3. Fable structured call -> { score, rank_reason, factors, drafts, evidence }
   void lookupRelationship;
-  throw new Error("TODO: implement the scoring engine");
+  throw new Error("TODO: implement the scoring engine (loads LITMUS.md)");
 }
 
-// Rank a batch into the worklist the rep actually sees.
-export async function scoreAndRank(inputs: ScoreInput[]): Promise<ScoredSignal[]> {
-  const scored = await Promise.all(inputs.map(scoreSignal));
-  return scored.sort((a, b) => b.score - a.score);
+// Score the batch, rank, and return only the top N — the overloaded rep's worklist.
+export async function scoreAndRank(
+  inputs: ScoreInput[],
+  cfg: ScoreConfig,
+): Promise<ScoredSignal[]> {
+  const scored = await Promise.all(inputs.map((i) => scoreSignal(i, cfg)));
+  const ranked = scored.sort((a, b) => b.score - a.score);
+  return ranked.slice(0, cfg.topN ?? 7);
 }

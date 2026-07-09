@@ -43,7 +43,12 @@ score(signal) -> { score, rank_reason, factors, enriched, drafts, warm_path?, ev
   - `urgent` — how fresh / time-boxed is the signal? (job change inside 30-90d window scores high)
   - `icp_fit` — does the account/persona match? (Sillage persona + firmographics)
 - **Anthropic does the reasoning**, not just a weighted sum: the model reads the aggregated account intel (all of the account's Sillage signals, job posts, content engagement) and writes the `rank_reason` — the one sentence a rep reads to decide. Forced structured output; the UI renders from JSON.
-- **Ranked worklist out**, not a binary card. "Work these 5, here's why each" — a better demo and a better product than "real/noise".
+- **The prompt is the product: `LITMUS.md`.** It is the system prompt `score.ts` loads. Templated slots: `{{CLIENT_CONTEXT}}`, `{{SIGNAL}}`, `{{ENRICHED_CONTACT}}`, `{{WARM_PATH}}`, `{{FEEDBACK_EXAMPLES}}`. Treat edits to it as changes to core IP. Composite: `real` and `icp_fit` are gates, `urgent`/`warm` are boosts (a dead or out-of-ICP prospect scores ~0 by design).
+- **Ranked worklist out, filtered to top 5-10** — never dump all scored data (that recreates the firehose the rep is drowning in). The cut is the value.
+
+### CLIENT CONTEXT — set up once (onboarding)
+
+The rep fills `client-context.md` once (template: `client-context.example.md`): what they sell, ICP + disqualifiers, competitors, proof assets, tone of voice, a real message that worked. It grounds `icp_fit` scoring and the draft tone — a prospect is only "good" relative to what THIS seller offers. Injected as `{{CLIENT_CONTEXT}}`. Not raw data (no normalization) — it's the grounding layer.
 
 ## Action layer (Unipile)
 
@@ -75,6 +80,18 @@ Litmus is a layer, not a destination. `score()` is a function; the dashboard, th
 - **FullEnrich:** `https://app.fullenrich.com/api/v2`, `Bearer`. Sync `people/lookup`+`company/lookup` (profiles, 0.25cr/result). Async `contact/enrich/bulk` (email/phone, 30-90s poll). Free test contact: Grégoire Démogé @ fullenrich.com. Client written (`src/fullenrich.ts`).
 - **Unipile:** `https://{DSN}/api/v1`, `X-API-KEY`. `unipile-node-sdk`. 7-day free trial, no CC. `POST /emails`, `POST /chats/{id}/messages`, hosted auth `POST /hosted/accounts/link`.
 - **Anthropic:** Fable loop (A/B vs Sonnet at 11:00). `web_search` server tool for corroboration. Structured outputs for the score JSON.
+
+## Human gate + learning loops
+
+The engine proposes; the rep disposes; outcomes tune the engine.
+
+- **Approval gate (before send).** Every draft carries `approved?`. Unipile fires only after the rep's 👍. This is the credible GTM model (human owns the send) and the first feedback signal. A 👎 can carry a reason.
+- **Output eval loop** (`feedback.ts`, `data/feedback.jsonl`). 👍/👎 + reason is logged and the recent set is injected into `LITMUS.md` as `{{FEEDBACK_EXAMPLES}}`, so the scorer stops repeating rejected patterns. No training — few-shot. **Demoable:** reject a prospect for "wrong persona", re-run, watch it drop. This proves the prompt is data-driven.
+- **Client feedback loop** (roadmap-real). Unipile inbound webhooks fire on prospect replies → `client_reply` feedback → outcome-weight the score in prod. Wire if ahead; otherwise narrate — it's the long-term moat.
+
+## Output destinations (agnostic)
+
+"We just create an output." Slack for the demo; the same `ScoredSignal` renders into HubSpot / Salesforce, or any agent window the rep runs (Claude, Hermes, etc.). The engine never knows or cares where it lands.
 
 ## Risk register
 

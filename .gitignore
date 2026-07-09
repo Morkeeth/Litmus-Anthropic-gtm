@@ -2,6 +2,8 @@ node_modules/
 .env
 .env.*
 !.env.example
+client-context.md
+data/feedback.jsonl
 dist/
 *.log
 .DS_Store
