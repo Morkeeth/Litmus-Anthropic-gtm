@@ -84,9 +84,10 @@ The rep has approved/rejected past outputs. Apply the pattern; do not repeat rej
 
 ### Output — STRICT JSON only
 
+Do NOT output `score` — the composite is computed in code from your factor values (see the formula above), so it always matches the stated math. Output only the fields below.
+
 ```json
 {
-  "score": 0,
   "rank_reason": "one sentence",
   "why_now": { "trigger": "...", "what_changed": "...", "why_buying": "..." },
   "factors": [

@@ -101,7 +101,7 @@ const EMIT_TOOL: Anthropic.Tool = {
   },
 };
 
-// LITMUS.md formula: base = 100*real*icp_fit ; score = base*(0.6 + 0.25*urgent + 0.15*warm)
+// LITMUS.md formula (authoritative): base = 100*real*icp_fit ; score = base*(0.4 + 0.35*urgent + 0.25*warm)
 function composite(factors: ScoreFactor[]): number {
   const f = (k: string) => factors.find((x) => x.key === k)?.value ?? 0;
   const base = 100 * f("real") * f("icp_fit");
