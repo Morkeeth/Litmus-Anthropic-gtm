@@ -1,33 +1,43 @@
 # Litmus
 
-**Litmus takes a buying signal and tells you whether it is real, with proof.**
+**Litmus is the scoring layer for intent.** It reviews Sillage's signal firehose, scores and ranks what to act on with cited reasoning, enriches the contact, drafts the outreach, and fires it multi-channel — into whatever destination you already use.
 
-Built for the Station F Agentic GTM Hackathon (Thu Jul 9). Sponsors: Claude Startups (Anthropic), FullEnrich, Sillage.
+Built for the Station F Agentic GTM Hackathon (Thu Jul 9). Track 1 — Acquisition. Sponsors: Claude Startups (Anthropic), FullEnrich, Sillage.
 
-## The 60-second pitch
+## The pitch
 
-**Problem.** Intent data runs 31 to 47 percent false positives. AI sales agents churn at 50 to 80 percent a year. Every tool in the market sells you *more* signals and *more* sends. Reps burn days chasing accounts that were never in-market.
+**Problem.** Sillage surfaces a *lot* of intent. That's the point — and the problem. A rep opens a firehose of signals every morning and has no principled way to decide which five accounts to work, why, or how to reach them. Everyone sells more signals; nobody tells you which ones matter.
 
-**Solution.** Litmus is the precision layer over your existing signals. Give it a signal. It gathers independent evidence, decides `REAL`, `NOISE`, or `NEEDS A SECOND SIGNAL`, and returns the verdict with a chain of proof. It sits on top of any signal source and in front of any outreach tool.
+**Solution.** Litmus is the brain in the middle of the GTM stack. It scores every signal on real, warm, urgent, and ICP-fit, ranks them into a worklist with a cited reason for each, enriches the top contacts to reachable email + phone, drafts personal outreach, and sends it across email and LinkedIn. Destination-agnostic: the output lands in HubSpot, Salesforce, Slack, or a dashboard.
 
-**Inspiration.** We keep building systems that verify whether information is still true instead of trusting it blindly. Point that habit at the GTM stack and the gap is obvious: everyone surfaces signals, nobody checks them. Litmus is the check.
+**Why it's not glue.** Everything except the scoring is a commodity connection. The score + the reasoning (Anthropic) is the proprietary part. That's what the demo shows its work on.
 
-## How it works
+## The pipeline
 
-1. A signal arrives (Sillage, a job-change alert, any source).
-2. Litmus runs a Claude agent loop that gathers evidence: confirms the company exists (FullEnrich company search), confirms the person is in that role now (FullEnrich people search + enrich), looks for a corroborating second signal.
-3. It returns a verdict + evidence chain that cites exactly which checks drove the call.
+```
+CRM (HubSpot/Salesforce) ─▶ SILLAGE ─▶ FULLENRICH ─▶ LITMUS SCORE ─▶ ACTION ─▶ OUTPUT
+   provides accounts       intent      phone+email   Anthropic:       Unipile:   agnostic sink:
+   to watch                firehose    (reachable)   score+rank+why   LinkedIn   HubSpot / SF /
+                                                      (the IP)         + email    Slack / dashboard
+```
 
-## Sponsor fit
+1. **Sillage (MCP)** streams intent signals for the accounts you watch.
+2. **FullEnrich** turns a matched person into a reachable contact (verified email + mobile).
+3. **Litmus scores** every signal — real · warm · urgent · ICP-fit — into a 0-100 rank with a cited reason (Anthropic).
+4. **Unipile** sends the drafted email + LinkedIn message on behalf of the rep.
+5. **Output** is rendered into any sink: Slack (demo), HubSpot / Salesforce (adapter), or the dashboard.
 
-- **FullEnrich** is the verification substrate: is the org real, is the person really there.
-- **Sillage** is the signal source: Litmus makes Sillage signals provably actionable. Complementary, not competitive.
-- **Claude** is the reasoning engine that runs the verification loop.
+## Sponsor / tool fit (all load-bearing)
+
+- **Sillage** — the intent source. We consume the firehose and make it a ranked worklist.
+- **FullEnrich** — reachability: verified email + phone so a scored account is actionable.
+- **Claude (Anthropic)** — the scoring + reasoning engine. The differentiator, not orchestration decoration.
+- **Unipile** — the action layer: one API, email + LinkedIn, on behalf of the rep.
 
 ## Repo
 
-- `BUILD_PLAN.md` — the hour-by-hour plan for Thursday.
-- `mock/signals.json` — sample signals to build against before we have a live Sillage key.
-- `src/` — skeleton stubs (types, FullEnrich client, verify loop, entry point). Not built yet. Thursday's work.
-
-See the full ideation brief in Obsidian: `01 Projects/Hackathons/litmus-ideation.md`.
+- `ARCHITECTURE.md` — the scoring pipeline, schema, and design decisions.
+- `BUILD_PLAN.md` — hour-by-hour, guaranteed vs stretch, roles.
+- `WORKFLOW.md` — how the three of us push to this repo without stepping on each other.
+- `mock/` — Sillage-shaped signals + seeded relationships to build against before live data.
+- `src/` — stubs: Sillage/FullEnrich/Unipile clients, the score engine, the agnostic output sinks.

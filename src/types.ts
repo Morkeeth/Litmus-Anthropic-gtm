@@ -1,12 +1,9 @@
-// Litmus core types — v2 (two-axis: truth × warmth). Filled out Thursday.
+// Litmus canonical types — v3 (scoring pipeline).
+// The scoring engine + system prompt operate ONLY on these shapes.
+// Raw Sillage / FullEnrich JSON never reaches the model — normalize.ts maps into these first.
 
-export type Truth = "REAL" | "NOISE" | "UNPROVEN";
-export type Warmth = "WARM" | "COLD";
-export type Action = "WARM_INTRO" | "VERIFY_COLD" | "DROP" | "WATCH";
+// ---------- Canonical inputs (produced by normalize.ts) ----------
 
-// Signal shape aligned with Sillage's public vocabulary (their 8 signal agents,
-// three-layer source taxonomy). No public schema exists, so this mock matches their
-// language; swap-in against the real feed means renaming fields at one boundary.
 export type SignalAgent =
   | "competitor_activity"
   | "job_updates"
@@ -17,60 +14,83 @@ export type SignalAgent =
   | "job_posting_insights"
   | "account_based_signals";
 
+// One intent event, source-normalized. From Sillage (live) or mock.
 export interface Signal {
   signal_id: string;
   agent: SignalAgent;
-  // e.g. job_change | champion_new_role | competitor_engagement | hiring_wave | funding_round | keyword_mention
-  type: string;
+  type: string; // job_change | champion_new_role | competitor_engagement | hiring_wave | funding_round | keyword_mention
   category: "first_party" | "social" | "web";
   account: { name: string; domain?: string; icp_match?: boolean };
   contact: {
     full_name: string;
     role?: string;
     linkedin_url?: string;
-    // champion_tracking only: where we knew them from
-    previous_company?: string;
+    previous_company?: string; // champion_tracking: where we knew them
   };
-  source?: { channel: string; url?: string };
   summary: string;
   detected_at: string;
   tier?: number;
-  confidence: number;
-  expected_verdict?: string; // demo aid only
+  raw?: unknown; // original vendor payload, kept for the evidence chain, never sent to the model
 }
 
-export interface EvidenceItem {
-  // truth axis: "company_exists" | "person_in_role" | "second_signal"
-  // warmth axis: "relationship_edge"
-  check: string;
-  axis: "truth" | "warmth";
-  result: "pass" | "fail" | "inconclusive";
-  detail: string; // the exact FullEnrich field / relationship edge that drove it
+// FullEnrich, source-normalized. The reachability + "is she really there now" facts.
+export interface EnrichedContact {
+  full_name: string;
+  title?: string;
+  is_current_role?: boolean; // FullEnrich employment.current.is_current
+  role_started_at?: string; // employment.current.start_at
+  company?: { name?: string; domain?: string };
+  work_email?: { email: string; status: string }; // status: DELIVERABLE | ...
+  mobile?: { number: string; region?: string };
+  linkedin_url?: string;
+  raw?: unknown;
+}
+
+// ---------- Scoring output (the product) ----------
+
+export interface ScoreFactor {
+  key: "real" | "warm" | "urgent" | "icp_fit";
+  value: number; // 0..1 contribution
+  detail: string; // the exact field / edge that drove it (for the evidence chain)
 }
 
 export interface WarmPath {
-  via: string; // who can make the intro
-  relationship: string; // e.g. "ex-colleague, 3y overlap" | "past champion at <company>"
-  strength: number; // 0..1
-  as_of: string; // edges decay too — cite freshness
+  via: string;
+  relationship: string;
+  strength: number;
+  as_of: string;
 }
 
-export interface LitmusResult {
+export interface Draft {
+  channel: "email" | "linkedin";
+  subject?: string; // email only
+  body: string;
+}
+
+export interface ScoredSignal {
   signal_id: string;
-  truth: Truth;
-  warmth: Warmth;
-  warm_path?: WarmPath; // present iff warmth === "WARM"
-  action: Action; // derived from the 2×2, never free-form
-  confidence: number;
-  evidence: EvidenceItem[]; // spans both axes
+  score: number; // 0..100 composite
+  rank_reason: string; // the one sentence a rep reads — written by the model
+  factors: ScoreFactor[];
+  enriched?: EnrichedContact;
+  warm_path?: WarmPath;
+  drafts: Draft[]; // email + linkedin, ready for the action layer
+  evidence: EvidenceItem[];
 }
 
-// Relationship DB row (seeded, read-only — we never crawl)
+export interface EvidenceItem {
+  check: string; // "person_in_role" | "relationship_edge" | "signal_freshness" | "icp_match"
+  source: "fullenrich" | "sillage" | "relationship_db" | "web_search";
+  result: "pass" | "fail" | "inconclusive";
+  detail: string;
+}
+
+// Relationship DB row (seeded, read-only)
 export interface RelationshipEdge {
   person_name: string;
   person_company?: string;
-  via: string; // who on our side holds the edge
+  via: string;
   relationship: string;
-  strength: number; // 0..1
+  strength: number;
   as_of: string;
 }

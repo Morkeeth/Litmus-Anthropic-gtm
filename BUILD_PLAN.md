@@ -1,73 +1,65 @@
-# Litmus — Build Plan (v2, two-round pitch)
+# Litmus — Build Plan (v3, scoring pipeline)
 
-Goal for Thursday: **one primitive, one demo path with a shallow and a deep cut**, all three sponsors load-bearing, zero fake numbers, frozen at 17:30. Format is a **two-round live demo** (everyone pitches once; finalists pitch again), so we build ONE thing that has a 60s round-1 cut and a deeper round-2 cut. Architecture detail in `ARCHITECTURE.md`.
+Track 1 — Acquisition. Goal: **one pipeline, one demo path with a shallow and a deep cut**, all sponsors + Unipile load-bearing, zero fake numbers, frozen at 17:30. Two-round pitch: build ONE thing with a 90s round-1 cut and a deeper round-2 cut. Architecture in `ARCHITECTURE.md`, team rules in `WORKFLOW.md`.
 
-## Definition of done (the only bar that matters)
+## The product
 
-By 17:30 we can, live, take a signal and return a **2×2 verdict** (truth × warmth) with an evidence chain a skeptical CRO cannot poke a hole in:
-- **REAL + COLD** — verifiable person, current role, corroborated, no known path → verified cold outreach.
-- **NOISE** — role no longer exists / person left → drop, with proof. **(round-1 hero: "hot signal, left four months ago, here's the record.")**
-- **REAL + WARM** — a champion move: person verified in new seat + we hold a relationship edge → warm intro via X. **(round-2 depth.)**
-- **UNPROVEN** — real person, one weak signal → watch.
+Litmus scores Sillage's intent firehose into a ranked worklist with cited reasons, enriches the top contacts (FullEnrich), drafts the outreach, sends it multi-channel (Unipile), and renders the output into any sink (Slack demo). The score + reasoning (Anthropic) is the IP; everything else is pipes.
 
-## Scope: in vs out
+## Definition of done (17:30)
 
-**In:** the `verify()` primitive (truth + warmth); FullEnrich sync search + enrich; **seeded** relationship DB (read-only, one lookup tool); 3–4 curated demo signals pre-warmed; single-page UI with 2×2 verdict cards; pre-warm cache.
+Live, from real Sillage data pulled this morning:
+- A **ranked worklist** of scored signals, each with a one-sentence cited reason (the score, not a binary card).
+- The top one **enriched** to a verified email + LinkedIn (FullEnrich).
+- A **drafted** email + LinkedIn message (Claude/Fable).
+- **One live send** via Unipile (email + LinkedIn message to an existing connection).
+- The output **rendered in Slack** (Block Kit card in a thread).
 
-**Out:** real CRM read/write; any actual sending; real-time Sillage as a dependency (mock it); crawling/building a relationship graph (seed only); auth, multi-user, persistence beyond JSON/SQLite cache; batch/scale.
+## Guaranteed vs stretch (scope discipline — 4 integrations, protect the core)
 
-## The two-round mapping (one build, two cuts)
+**Guaranteed (build in this order):**
+1. Sillage MCP → real signals for a top account + persona, pulled + cached this morning.
+2. `normalize.ts` → canonical Signal/EnrichedContact (FullEnrich mapping now; Sillage mapping at 9:30).
+3. FullEnrich enrich → verified email + LinkedIn on the top contacts.
+4. `score.ts` → composite score + rank + cited reason (Anthropic, structured output).
+5. Slack sink → ranked cards in a thread.
+6. Unipile → one live send (email + LinkedIn to an existing connection).
 
-- **Round 1 (everyone, ~60–90s):** problem → solution → the **truth axis** and the **NOISE gotcha**. Bulletproof, rehearsed, cache-backed. This alone must be able to win.
-- **Round 2 (finalists, deeper):** the **warmth axis** — the champion who moved, verified and routed to a warm intro — plus "one engine, plug it on any surface" (CRM Truth as the second surface, spoken/shown lightly). This is where ambition pays; it only ships if round-1 is frozen solid first.
-
-## Architecture (summary — full in ARCHITECTURE.md)
-
-```
-signal ─▶ Claude/Fable agent loop ─▶ { truth, warmth, action, evidence[] } ─▶ UI cards
-             ├─ search_company / search_people / enrich_contact   → FullEnrich (truth)
-             ├─ lookup_relationship(person)                       → Relationship DB (warmth, seeded)
-             └─ find_second_signal                                → corroboration
-```
-Forced structured JSON out. Loop capped ~5 tool calls. Demo reads the pre-warm cache; one live call held ready.
+**Stretch (only if ahead at 16:00):** HubSpot sink (App Card in a dev test account, else PATCH+Note) · live MCP-to-MCP agentic loop · Litmus exposed as an MCP tool · **Gradium voice** (phone channel — "Most Creative" + "Best use of Gradium").
 
 ## Roles
 
-- **Pierre (heavy dev)** — owns the engine: FullEnrich client, the Fable agent loop + tool wiring, the seeded relationship DB + `lookup_relationship`, structured verdict output, the pre-warm cache. The hard core. Guards risks #1–3.
-- **Oscar** — architecture + verdict logic (the per-axis rules and citations), the demo signals (incl. the recognizable NOISE gotcha and the champion beat), pitch narrative, sponsor-fit framing. Guards risk #4.
-- **Desiree (delivery)** — owns "done by 17:30": the demo path + UI (2×2 cards + evidence), the round-1/round-2 script split, timeboxing, rehearsal, and keeping scope frozen. Guards risks #5–6.
+- **Pierre (heavy dev)** — the engine: Sillage MCP pull + `normalize.ts`, FullEnrich enrich wiring, `score.ts` (Fable loop + structured output), Unipile send, cache. Owns `src/*` except UI.
+- **Oscar** — scoring rules + weights, curated account context, the demo signals (incl. the high-score hero + a killed false-positive), pitch, sponsor framing, keys at 9:00 (Sillage OAuth, Unipile trial).
+- **Desiree (delivery)** — Slack sink + dashboard UI, demo path, round-1/round-2 script, timeboxing, rehearsal, freeze enforcement. Side challenges (LinkedIn/X/Gamma).
 
 ## Hour-by-hour (9:30 → 17:30)
 
 | Time | Milestone | Owner |
 |---|---|---|
-| 9:00–9:30 | FullEnrich key (Bearer). Sillage MCP: `claude mcp add --transport http sillage https://api.getsillage.com/api/mcp/v2`, OAuth login to workspace. Seed workspace if empty (persona→accounts→agent→signal run). Pull real signals, cache to disk. | Oscar (Sillage) / Pierre (FullEnrich) |
-| 9:30–11:00 | FullEnrich client: sync `search_company` + `search_people` return real data. `enrich_contact` poll wrapper. Credits logged. | Pierre |
-| 9:30–11:00 | Seed relationship DB (edges: person/company/type/strength/as_of) from a small CSV + a couple of champion-history rows. `lookup_relationship` tool. | Pierre |
-| 11:00–13:00 | Fable verify loop: tools wired (FullEnrich + relationship), **two-axis structured JSON verdict**, evidence chain, explicit per-axis rules. | Pierre + Oscar |
-| 13:00–13:30 | Lunch / integrate: loop runs real FullEnrich + relationship end-to-end on one signal. | all |
-| 13:30–15:00 | Curate 3–4 demo signals (REAL+COLD, NOISE gotcha, REAL+WARM champion, UNPROVEN). UI: 2×2 verdict cards + evidence. | Oscar + Desiree |
-| 15:00–16:00 | **Pre-warm cache built and wired.** Demo runs entirely from cache. Freeze round-1 cut first. MCP wrapper (~50 lines, same verify fn) if on schedule — first cut if hot. | Pierre |
-| 16:00–16:30 | Wire the live MCP-to-MCP round-2 loop (Sillage MCP in, Litmus MCP out) as the flourish. Dashboard already runs on cached real signals from the morning pull. | Pierre |
-| 16:30–17:30 | Freeze build. Cache everything. Rehearse round-1 (60s) x3 and round-2 depth x2. | all |
+| 9:00–9:30 | Keys: FullEnrich Bearer; Sillage MCP OAuth (`claude mcp add ...`), seed workspace if empty, pull + cache real signals; Unipile 7-day trial, connect an aged Gmail + LinkedIn via hosted wizard. | Oscar / Pierre |
+| 9:30–11:00 | `normalize.ts`: confirm Sillage field paths against live payload; FullEnrich mapping (already written) tested on the free contact. Canonical Signals flowing. | Pierre |
+| 11:00–13:00 | `score.ts`: Fable loop, deterministic factor extraction + reasoning, structured `ScoredSignal` out, `web_search` corroboration. A/B Fable vs Sonnet on one signal. | Pierre + Oscar |
+| 13:00–13:30 | Lunch / integrate: real signal → normalize → enrich → score → ranked list, end to end. | all |
+| 13:30–15:00 | Slack sink (Block Kit cards) + dashboard worklist. Curate demo signals. Unipile send wired to a button. | Desiree + Pierre |
+| 15:00–16:00 | **Pre-warm cache** built + wired. Demo runs from cache. Freeze round-1 cut. Gradium voice IF ahead. | Pierre |
+| 16:00–16:30 | Round-2 depth: warm-intro beat + agnostic output (HubSpot sink or live MCP loop) as the flourish. | Pierre |
+| 16:30–17:30 | FULL FREEZE. Cache everything. Rehearse round-1 (90s) x3, round-2 x2. | all |
 
 ## Stack
 
-- Node + TypeScript, one small server.
-- `@anthropic-ai/sdk`, model **Fable** (latency + verdict quality; fall back to Sonnet if quality dips on the two-axis reasoning).
-- FullEnrich via REST (`https://app.fullenrich.com/api/v2`, `Authorization: Bearer`) — **confirm endpoints at kickoff**.
-- Relationship DB: SQLite (or flat JSON if faster to seed).
-- One static HTML page for the verdict cards.
-- `cache/` dir of JSON for the pre-warm.
+- Node + TypeScript, one process (engine + API + dashboard + Slack action handler).
+- `@anthropic-ai/sdk` (Fable), `unipile-node-sdk` (or raw REST in `src/unipile.ts`), `dotenv`.
+- Sillage via MCP (pull through Claude Code, cache). FullEnrich REST (`src/fullenrich.ts`, written). Slack incoming webhook.
+- Flat JSON for relationships + mocks + pre-warm cache. No database.
 
 ## First tasks when the clock starts
 
-- [ ] `npm init`, add `@anthropic-ai/sdk`, dotenv, sqlite (or none if JSON).
-- [ ] `.env`: `ANTHROPIC_API_KEY`, `FULLENRICH_API_KEY`, `SILLAGE_API_KEY` (if issued).
-- [ ] `src/fullenrich.ts` sync search + enrich; test against one real company.
-- [ ] `src/relationship.ts` seed + `lookup_relationship`.
-- [ ] `src/verify.ts` Fable loop, five tools, two-axis structured output.
-- [ ] Curate demo signals in `mock/signals.json` (add champion + warm-path fields).
-- [ ] Pre-warm cache script.
-- [ ] Single-page 2×2 UI.
-- [ ] Freeze round-1, then rehearse both cuts.
+- [ ] `npm i`; `.env` from `.env.example`.
+- [ ] Sillage MCP connect + pull real signals to cache.
+- [ ] Confirm Sillage payload → finish `normalize.ts` field paths.
+- [ ] Enrich top contacts (FullEnrich, free test contact first).
+- [ ] `score.ts` Fable loop + structured output.
+- [ ] Slack sink renders ranked cards.
+- [ ] Unipile: connect accounts, one live send.
+- [ ] Pre-warm cache, freeze, rehearse.

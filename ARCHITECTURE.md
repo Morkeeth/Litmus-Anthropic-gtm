@@ -1,140 +1,94 @@
-# Litmus — Architecture Review (v2, ambitious)
+# Litmus — Architecture (v3, scoring pipeline)
 
-For the team (Oscar / Pierre / Desiree) to review before we cut code. Companion to `BUILD_PLAN.md`.
-This is the "be ambitious" version, scoped to a hard 17:30 freeze and a **two-round pitch** (everyone pitches once; finalists pitch again). The two rounds map onto two demo depths from **one** build.
+For the team (Oscar / Pierre / Desiree). Track 1 — Acquisition. Companion to `BUILD_PLAN.md`.
+Scoped to a hard 17:30 freeze and a two-round pitch (everyone once; finalists again).
 
----
+## Thesis in one line
 
-## The thesis in one line
+Sillage surfaces a lot of intent. Litmus is the brain that decides what to do with it: score every signal, rank the worklist, explain why, and fire the action. Everything else is pipes; the score + reasoning is the product.
 
-Every GTM tool adds more (signals, sends, records). None checks if any of it is still true. **Litmus is the verification + routing layer for GTM.** Give it a signal, and it answers two questions a rep actually has: *is this real?* and *do we have a way in?* — then tells them what to do, with proof.
-
-## What changed from v1
-
-v1 verified one axis: **is the signal true?** Verdict was `REAL / NOISE / NEEDS_SECOND_SIGNAL`.
-
-v2 adds a second axis: **is it warm?** — powered by a seeded relationship DB. This is the upgrade that (a) makes it a product not a feature, (b) lets us tell the warm-path (#5) and champion (#9) stories **without cloning Sillage**, and (c) gives us a natural round-1 / round-2 split.
-
-### Why the relationship DB, and why it's safe to add
-
-- It turns a binary noise-filter into a **prioritization + routing engine**. The rep doesn't just learn "real/noise", they learn "warm-intro via Marie" vs "verified cold" vs "drop".
-- It dissolves the Sillage-clone trap. **Sillage detects the champion move. We verify it (FullEnrich) and route it (relationship DB).** We sit downstream, making Sillage's signal provably actionable and warm. Complementary, not competitive — the correct posture in front of a Sillage judge.
-- It's cheap because we **seed**, never crawl. Two free sources: Sillage's own champion-move history (already relationship edges), and a small mock CSV of "who the team knows" for the live warm-path beat.
-
----
-
-## The core primitive
+## The pipeline
 
 ```
-verify(claim) -> { truth, warmth, action, confidence, evidence[] }
+CRM (HubSpot/Salesforce) ──┐  provides the account list to watch (prod; workspace pre-seeded for demo)
+                           ▼
+   SILLAGE (MCP) ─────────────▶ intent firehose: job changes, champions, competitor moves, keywords...
+                           │
+                           ▼
+   FULLENRICH ───────────────▶ reachability: verified work email + mobile (async waterfall)
+                           │
+                           ▼
+   LITMUS SCORE (Anthropic) ─▶ score 0-100 = f(real, warm, urgent, icp_fit) + ranked + cited reason   ◀── THE IP
+                           │
+                           ▼
+   ACTION (Unipile) ─────────▶ drafted email + LinkedIn message, sent on behalf of the rep
+                           │
+                           ▼
+   OUTPUT (agnostic sink) ───▶ Slack (demo) · HubSpot / Salesforce (adapter) · dashboard
 ```
 
-One function, three input streams, one structured output. Everything else is a surface that calls it.
+The CRM appears at both ends: it *feeds* the account list into Sillage (prod concern — not built for the demo, the workspace is pre-seeded) and it's *one of* the output sinks. We do not build CRM→Sillage ingestion today.
 
-### The two axes -> four plays
+## The core: the scoring engine
 
-|            | WARM (path exists)                        | COLD (no path)                     |
-|------------|-------------------------------------------|------------------------------------|
-| **REAL**   | warm intro via X  (champion story #5+#9)  | verified cold outreach (Litmus #1) |
-| **NOISE**  | drop, here's proof (the gotcha)           | drop, here's proof                 |
-| **UNPROVEN** | watch / needs second signal             | watch / needs second signal        |
-
-The NOISE gotcha is the round-1 hero. The REAL+WARM champion beat is the round-2 depth.
-
----
-
-## System architecture
+One function is the whole product:
 
 ```
-                        ┌─────────────────────────────┐
-   Sillage signal ─────▶│                             │
-   (intent + champion   │      Claude agent loop      │───▶ Verdict (structured JSON)
-    moves; mock at start│      (Fable — fast + sharp) │      { truth, warmth, action,
-    live swap-in)       │                             │        confidence, evidence[] }
-                        │   tools:                    │              │
-                        │   • search_company   ───────┼──▶ FullEnrich  (truth axis)
-                        │   • search_people    ───────┤    verified email/phone/role
-                        │   • enrich_contact   ───────┘
-                        │   • lookup_relationship ────┼──▶ Relationship DB (warmth axis)
-                        │   • web_search (Anthropic   │    seeded: Sillage champ history
-                        │     server tool, corrobor.) │
-                        └─────────────────────────────┘    + team network CSV
-                                     │
-                                     ▼
-                          UI: verdict cards (2×2 + evidence chain)
-                                     │
-                          Pre-warm cache (disk) — demo reads cache, one live call held ready
+score(signal) -> { score, rank_reason, factors, enriched, drafts, warm_path?, evidence[] }
 ```
 
-### Product surfaces (decided Jul 9): headless engine, three doors
+- **Composite score 0-100** from four factors, each cited, none a black box:
+  - `real` — is the person actually in that role now? (FullEnrich lookup — the anti-false-positive check, the old Litmus verify)
+  - `warm` — do we have a path in? (seeded relationship DB — drives warm-intro vs cold)
+  - `urgent` — how fresh / time-boxed is the signal? (job change inside 30-90d window scores high)
+  - `icp_fit` — does the account/persona match? (Sillage persona + firmographics)
+- **Anthropic does the reasoning**, not just a weighted sum: the model reads the aggregated account intel (all of the account's Sillage signals, job posts, content engagement) and writes the `rank_reason` — the one sentence a rep reads to decide. Forced structured output; the UI renders from JSON.
+- **Ranked worklist out**, not a binary card. "Work these 5, here's why each" — a better demo and a better product than "real/noise".
 
-Litmus is a layer, not a destination — no "home screen". One `verify()` engine exposed through three thin surfaces, in build priority order:
+## Action layer (Unipile)
 
-1. **HTTP API** (`POST /verify`) — ~20 lines over the engine. Any CRM/Slack/workflow tool consumes verdicts today.
-2. **Dashboard** — verdict cards + evidence chain, static page served by the same process. The human approval gate and the stage view. Never grows into "another tab".
-3. **MCP server** — the same `verify()` wrapped as an MCP tool (`@modelcontextprotocol/sdk`, stdio, ~50 lines). Any AI agent calls Litmus before acting on a lead. Ships in the 15:00 block; first thing cut if the day runs hot.
+- One API, two channels: `email.send` (Gmail) + `messaging.sendMessage` (LinkedIn). Node SDK.
+- Auth: our `X-API-KEY` + a hosted-auth wizard link to connect the rep's Gmail/LinkedIn (one round-trip, Unipile owns the provider OAuth).
+- **Demo constraint:** live-send email + a LinkedIn message to an *existing connection* on an aged account. Cold LinkedIn invites are "prod-supported", not live-demoed (LinkedIn blocks fresh accounts).
 
-One Node/TS process serves engine + API + dashboard. Localhost is the demo substrate (cache makes it wifi-proof); Railway/Fly optional for a public URL — not serverless, the enrich waterfall polls 30–90s.
+## Output layer (agnostic sinks)
 
-### Components
+The engine emits a neutral `ScoredSignal`; a thin adapter renders it per destination. Sinks are pluggable and independent — adding one never touches the engine.
 
-1. **Signal ingest — Sillage MCP.** Sillage ships a remote MCP server: `https://api.getsillage.com/api/mcp/v2` (streamable HTTP, OAuth 2.1, workspace-scoped, no API key). We pull real signals with `sillage_v2_list_signals` / `sillage_v2_get_signal`; `sillage_v2_get_company_mapping` returns company + people profiles. Empty workspace? Seed it via MCP: `upsert_persona` → `add_top_accounts` → `create_agent` → `launch_signal_run`. `mock/signals.json` is now the FALLBACK, not the primary. Ingest boundary maps any signal → our `Signal` type.
-   - OAuth is trivial in an interactive client (Claude Code) but awkward for our headless server to hold a token. Decision: pull real signals via Claude Code and **cache to disk before the pitch**; the dashboard demo reads the cache (real Sillage data, deterministic, no OAuth on the critical path). Live MCP-to-MCP loop is the round-2 flourish.
-   - Independence rule: we verify Sillage signals with **FullEnrich** (an outside witness), never with `sillage_v2_enrich_company` (circular). Independence is what makes both sponsors load-bearing.
-2. **FullEnrich client (truth substrate).** Sync `search_company` + `search_people`; `enrich_contact` wraps the async poll. Cap loop at ~5 tool calls. `GET /account/credits` logged.
-3. **Relationship DB (warmth substrate).** Seeded SQLite (or flat JSON if time is tight). Table: `edges(person, company, relationship_type, strength, as_of)`. Read-only. **No graph-building** — seeded only. One tool: `lookup_relationship(person) -> path | none`.
-4. **Agent loop (brain).** Fable. FullEnrich + relationship calls exposed as tools. **Forced structured JSON output** — UI renders from JSON, never parses prose live.
-5. **Verdict rules (explicit, not vibes).** Each axis has hard rules and cites the exact field that drove it:
-   - truth: company unverifiable → NOISE; person not in role now → NOISE; confirmed no corroboration → UNPROVEN; confirmed + corroboration → REAL.
-   - warmth: relationship edge with `as_of` still valid → WARM (name the path + strength); else COLD.
-   - action derived from the 2×2.
-6. **UI.** Verdict cards showing the 2×2 position + evidence chain. Single page, no framework needed.
-7. **Pre-warm cache.** Non-negotiable. Run all demo signals through the real pipeline pre-pitch, cache every response (FullEnrich + relationship) to disk. Demo reads cache — instant, wifi-proof, still real data. One live call held ready if a judge pushes.
+- **Slack** — Block Kit card in a thread-per-rep. 5-min setup, zero gating. **The guaranteed demo sink.**
+- **HubSpot** — stretch. Modern App Card in a free Developer Test Account; degrade to `PATCH` custom properties + a Note (works on any free portal, no Enterprise). Classic CRM cards are dead (deprecated Jun 2025) — do not build them.
+- **Salesforce** — named in the pitch as "same adapter pattern"; not built today.
+- **Dashboard** — our own page, the ranked worklist. Also the stage view + human approval gate.
 
-### Schema delta (from `src/types.ts`)
+## Product surface: headless engine, pluggable sinks
 
-```ts
-type Truth  = "REAL" | "NOISE" | "UNPROVEN";
-type Warmth = "WARM" | "COLD";
-type Action = "WARM_INTRO" | "VERIFY_COLD" | "DROP" | "WATCH";
+Litmus is a layer, not a destination. `score()` is a function; the dashboard, the Slack sink, the CRM adapters, and an optional MCP tool are all thin doors over it. One Node/TS process serves engine + API + dashboard. Localhost + committed cache is the demo substrate (wifi-proof); a public URL (Railway/Fly, not serverless — the enrich poll runs 30-90s) is optional if we're ahead.
 
-interface LitmusResult {
-  signal_id: string;
-  truth: Truth;
-  warmth: Warmth;
-  warm_path?: { via: string; relationship: string; strength: number };
-  action: Action;
-  confidence: number;
-  evidence: EvidenceItem[];   // now spans both axes
-}
-```
+## Data flow / caching (the demo must never hang)
 
----
+- Pull real Sillage signals + FullEnrich enrichments once, **pre-warm to disk before the pitch.** The dashboard and Slack demo read cache — instant, wifi-proof, still real data. One live call held ready if a judge pushes.
+- Independence rule: score `real` with **FullEnrich**, never `sillage_v2_enrich_company` (circular).
 
-## Sponsor fit (all three load-bearing)
+## Integrations — verified facts
 
-- **Sillage** = signal source, *including champion moves*. We consume, verify, route. We make their signals provably actionable.
-- **FullEnrich** = the truth substrate. Every REAL/NOISE call cites a FullEnrich field.
-- **Claude (Fable)** = the reasoning engine running the two-axis verdict loop.
-
----
+- **Sillage MCP:** `https://api.getsillage.com/api/mcp/v2`, streamable HTTP, OAuth 2.1, workspace-scoped, no API key. Tools: `sillage_v2_list_signals`, `sillage_v2_get_signal`, `sillage_v2_get_company_mapping`; seed via `upsert_persona`/`add_top_accounts`/`create_agent`/`launch_signal_run`. OAuth is interactive-client friendly (Claude Code) → pull + cache; our server stays off the OAuth path.
+- **FullEnrich:** `https://app.fullenrich.com/api/v2`, `Bearer`. Sync `people/lookup`+`company/lookup` (profiles, 0.25cr/result). Async `contact/enrich/bulk` (email/phone, 30-90s poll). Free test contact: Grégoire Démogé @ fullenrich.com. Client written (`src/fullenrich.ts`).
+- **Unipile:** `https://{DSN}/api/v1`, `X-API-KEY`. `unipile-node-sdk`. 7-day free trial, no CC. `POST /emails`, `POST /chats/{id}/messages`, hosted auth `POST /hosted/accounts/link`.
+- **Anthropic:** Fable loop (A/B vs Sonnet at 11:00). `web_search` server tool for corroboration. Structured outputs for the score JSON.
 
 ## Risk register
 
 | # | Risk | Mitigation | Owner |
 |---|------|------------|-------|
-| 1 | Relationship DB scope creep eats the day | **Seeded only, read-only, one lookup tool. No crawling.** ~1h box. If it slips, truth-only demo still stands (graceful degradation). | Pierre |
-| 2 | Sillage API no-show / flaky | Mock from minute zero; live is swap-in. Demo off mock is invisible. | Pierre |
-| 3 | Live enrich latency on stage | Pre-warm cache covers FullEnrich + relationship lookups. | Pierre |
-| 4 | Two-axis verdict reads as "vibes" | Explicit per-axis rules; cite exact fields; Fable for speed+quality. | Oscar |
-| 5 | Two-round pitch tempts two demos | **One build, two depths.** Round 1 = truth axis + NOISE gotcha (60s, bulletproof). Round 2 = warmth axis + champion beat + "one engine, any surface". Never build two demos. | Desiree |
-| 6 | Over-scope generally | One primitive, one demo path with a shallow and a deep cut. Not on the path → not built. | Desiree |
+| 1 | 4 integrations = over-scope | Ruthless guaranteed/stretch split (see BUILD_PLAN). FullEnrich client already written; Slack + Unipile ~15min each. | Desiree |
+| 2 | Sillage OAuth from our server | Pull + cache via Claude Code; server never holds the token. | Pierre |
+| 3 | Enrich latency on stage | Pre-warm cache. | Pierre |
+| 4 | Unipile LinkedIn on fresh account fails | Aged account, message existing connection; cold invite = pitch-only. | Oscar |
+| 5 | HubSpot account/tier fights us | Slack is primary; HubSpot degrades to PATCH+Note; never on critical path. | Oscar |
+| 6 | "Just glue" critique | Demo shows the SCORE and the REASONING, not connections. The engine is the star. | Oscar |
+| 7 | Two-round pitch tempts two demos | One build, two cuts: R1 = scored worklist + one live send; R2 = warm-intro depth + agnostic output + voice stretch. | Desiree |
 
----
+## Side challenges (do not bloat core)
 
-## Open questions for the team
-
-1. Relationship DB: SQLite or flat JSON? (JSON is faster to seed, SQLite reads cleaner in the pitch. Pierre's call.)
-2. Which real, recognizable person do we build the NOISE gotcha and the champion beat around? Must land as true, not toy.
-3. Do we seed the team's own network for the live warm-path demo, or use a clean mock persona set?
-4. Fable vs Sonnet for the loop — Fable for latency, confirm the verdict quality holds on the two-axis reasoning.
+- LinkedIn + X posts (near-free) · Best use of Gamma (build the deck / per-account brief in Gamma).
+- **Gradium voice (gradium.ai)** — stretch: a voiced account briefing or AI voice call = the *phone* channel in Track 1, wins "Most Creative" + "Best use of Gradium". Only if core lands by 15:00. Clearly-marked module, never on the critical path.
