@@ -37,10 +37,10 @@ function makeCloud(n: number, seed = 7) {
 }
 
 const FUNNEL = [
-  { n: 8432, lbl: "contacts in your CRM" },
-  { n: 1204, lbl: "match your ICP" },
+  { n: 8432, lbl: "scouted" },
   { n: 312, lbl: "verified reachable" },
-  { n: 5, lbl: "worth your morning" },
+  { n: 20, lbl: "hot" },
+  { n: 3, lbl: "prime — act on these first" },
 ];
 
 // Structured reason chips — research: categorical labels beat free-text AND thumbs-only for learning signal.
@@ -181,13 +181,14 @@ export default function Dashboard() {
             {" · "}<Link href="/onboarding">edit context</Link>
           </div>
 
-          {shown.map((p) => {
+          {shown.map((p, idx) => {
             const st = state[p.signal_id]; const e = p.enriched;
+            const tier = !focusId && idx < 3 ? "prime" : p.score >= 60 ? "hot" : null;
             return (
               <article className="entry" key={p.signal_id}>
                 <div className={`score ${scoreClass(p.score)}`}>{p.score}<span className="of">/ 100</span></div>
                 <div>
-                  <div className="who">{e?.full_name ?? "Unknown"} · {e?.title ?? ""}{e?.company?.name ? ` · ${e.company.name}` : ""}</div>
+                  <div className="who">{tier && <span className={`tier ${tier}`}>{tier}</span>}{e?.full_name ?? "Unknown"} · {e?.title ?? ""}{e?.company?.name ? ` · ${e.company.name}` : ""}</div>
                   <h2 className="reason">{p.rank_reason}</h2>
                   {p.why_now && (
                     <div className="whynow">
