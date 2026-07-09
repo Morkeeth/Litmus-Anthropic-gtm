@@ -1,6 +1,6 @@
 [
   {
-    "signal_id": "sig_real_01",
+    "signal_id": "sig_real_cold_01",
     "type": "job_change",
     "family": "social",
     "person": {
@@ -10,10 +10,10 @@
       "new_company": "PLACEHOLDER real company"
     },
     "org": { "name": "PLACEHOLDER real company", "domain": "" },
-    "context": "Past customer just joined as VP Sales. Should verify to REAL once corroborated.",
+    "context": "New VP at a target account. Person verifiable, role current, corroborated, no known path in. Expect REAL + COLD -> VERIFY_COLD.",
     "detected_at": "2026-07-09T09:12:00Z",
     "confidence": 0.72,
-    "expected_verdict": "REAL"
+    "expected_verdict": "REAL+COLD"
   },
   {
     "signal_id": "sig_noise_01",
@@ -26,13 +26,30 @@
       "new_company": "PLACEHOLDER company they already left"
     },
     "org": { "name": "PLACEHOLDER company they already left", "domain": "" },
-    "context": "Signal claims this person is the buyer, but they left the company months ago. Should verify to NOISE.",
+    "context": "THE GOTCHA. Signal claims this person is the buyer, but they left months ago. Expect NOISE -> DROP, with the proof. Round-1 hero card.",
     "detected_at": "2026-07-09T09:14:00Z",
     "confidence": 0.68,
     "expected_verdict": "NOISE"
   },
   {
-    "signal_id": "sig_maybe_01",
+    "signal_id": "sig_champion_01",
+    "type": "champion_move",
+    "family": "social",
+    "person": {
+      "full_name": "PLACEHOLDER past champion",
+      "linkedin_url": "",
+      "new_title": "VP Engineering",
+      "new_company": "PLACEHOLDER real company",
+      "previous_company": "PLACEHOLDER where they championed us"
+    },
+    "org": { "name": "PLACEHOLDER real company", "domain": "" },
+    "context": "Sillage-style champion move: past champion just landed in a buying seat. Verify they're really there (FullEnrich), find the edge (relationship DB). Expect REAL + WARM -> WARM_INTRO via the edge. Round-2 depth card.",
+    "detected_at": "2026-07-09T09:15:00Z",
+    "confidence": 0.81,
+    "expected_verdict": "REAL+WARM"
+  },
+  {
+    "signal_id": "sig_unproven_01",
     "type": "keyword_mention",
     "family": "social",
     "person": {
@@ -42,9 +59,9 @@
       "new_company": "PLACEHOLDER real company"
     },
     "org": { "name": "PLACEHOLDER real company", "domain": "" },
-    "context": "Real person, real role, but only one weak signal and no corroboration. Should verify to NEEDS A SECOND SIGNAL.",
+    "context": "Real person, real role, one weak signal, no corroboration. Expect UNPROVEN -> WATCH.",
     "detected_at": "2026-07-09T09:16:00Z",
     "confidence": 0.55,
-    "expected_verdict": "NEEDS_SECOND_SIGNAL"
+    "expected_verdict": "UNPROVEN"
   }
 ]

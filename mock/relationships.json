@@ -1,0 +1,18 @@
+[
+  {
+    "person_name": "PLACEHOLDER past champion",
+    "person_company": "PLACEHOLDER real company",
+    "via": "PLACEHOLDER teammate name",
+    "relationship": "past champion — drove our deal at PLACEHOLDER previous company",
+    "strength": 0.9,
+    "as_of": "2026-05-15"
+  },
+  {
+    "person_name": "PLACEHOLDER known contact",
+    "person_company": "",
+    "via": "PLACEHOLDER teammate name",
+    "relationship": "ex-colleague, 3y overlap",
+    "strength": 0.7,
+    "as_of": "2026-03-01"
+  }
+]

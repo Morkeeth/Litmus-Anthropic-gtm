@@ -1,0 +1,22 @@
+{
+  "name": "litmus",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The verification + routing layer for GTM. Signal in, truth + warmth out, with proof.",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "verify": "tsx src/index.ts",
+    "prewarm": "tsx src/prewarm.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}
