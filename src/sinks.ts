@@ -26,7 +26,7 @@ function slackBlocks(items: ScoredSignal[], appUrl: string) {
         type: "mrkdwn",
         text: `*${s.score}/100 · ${e?.full_name ?? "?"}* — ${e?.title ?? ""}${e?.company?.name ? ` @ ${e.company.name}` : ""}\n${s.rank_reason}${s.why_now ? `\n_Why now:_ ${s.why_now.trigger} — ${s.why_now.why_buying}` : ""}${e?.work_email?.email ? `\n✉ ${e.work_email.email}` : ""}${s.warm_path ? `\n🔗 warm via ${s.warm_path.via}` : ""}`,
       },
-      accessory: { type: "button", text: { type: "plain_text", text: "Review & send →" }, url: `${appUrl}/dashboard`, action_id: `open_${s.signal_id}` },
+      accessory: { type: "button", text: { type: "plain_text", text: "Review & send →" }, url: `${appUrl}/dashboard?focus=${encodeURIComponent(s.signal_id)}`, action_id: `open_${s.signal_id}` },
     });
   }
   return blocks;

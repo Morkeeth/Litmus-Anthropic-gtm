@@ -7,22 +7,22 @@
 // hackathon-real learning loop; outcome-weighting the score is the prod version.
 
 import { appendFileSync, readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import type { Feedback } from "./types";
 
-const LOG = new URL("../data/feedback.jsonl", import.meta.url);
+const LOG = join(process.cwd(), "data/feedback.jsonl");
 
 export function recordFeedback(f: Feedback): void {
-  appendFileSync(LOG, JSON.stringify(f) + "\n");
+  try { appendFileSync(LOG, JSON.stringify(f) + "\n"); } catch { /* best-effort */ }
 }
 
 export function loadFeedback(limit = 20): Feedback[] {
-  if (!existsSync(LOG)) return [];
-  return readFileSync(LOG, "utf8")
-    .trim()
-    .split("\n")
-    .filter(Boolean)
-    .map((l) => JSON.parse(l) as Feedback)
-    .slice(-limit);
+  try {
+    if (!existsSync(LOG)) return [];
+    return readFileSync(LOG, "utf8").trim().split("\n").filter(Boolean).map((l) => JSON.parse(l) as Feedback).slice(-limit);
+  } catch {
+    return [];
+  }
 }
 
 // Render recent feedback as the {{FEEDBACK_EXAMPLES}} block for LITMUS.md.

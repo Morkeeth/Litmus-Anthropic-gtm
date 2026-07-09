@@ -22,8 +22,9 @@ export async function POST(req: Request) {
       emails?: string[];
       source?: "sillage" | "hubspot" | "fullenrich";
       destination?: string;
+      targetCompanies?: string[];
     };
-    const { clientContext, topN = 5, contacts, emails, source, destination } = body;
+    const { clientContext, topN = 5, contacts, emails, source, destination, targetCompanies } = body;
 
     let prospects;
     if (contacts?.length) {
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       prospects = await runFromHubspot(clientContext, topN);
     } else {
       if (!process.env.FULLENRICH_API_KEY) return NextResponse.json({ error: "ICP search needs FULLENRICH_API_KEY (or pass contacts[])" }, { status: 400 });
-      prospects = await runIcpWorkflow(clientContext, topN);
+      prospects = await runIcpWorkflow(clientContext, topN, targetCompanies);
     }
 
     // Deliver to the chosen destination (dashboard is the default — the response IS the delivery).

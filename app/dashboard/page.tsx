@@ -50,12 +50,15 @@ export default function Dashboard() {
   const [count, setCount] = useState(FUNNEL[0].n);
   const [stage, setStage] = useState(0);
   const [source, setSource] = useState<"mock" | "live">("mock");
+  const [focusId, setFocusId] = useState<string | null>(null);
 
   const filler = useMemo(() => makeCloud(120), []);
 
   useEffect(() => {
     const c = localStorage.getItem("litmus_context");
     if (c) { try { setBrand(JSON.parse(c).what_we_sell?.slice(0, 60) ?? ""); } catch {} }
+    const f = new URLSearchParams(window.location.search).get("focus");
+    if (f) { setFocusId(f); setPhase("brief"); }
     fetch("/api/prospects").then((r) => r.json()).then((d) => setProspects(d.prospects ?? []));
   }, []);
 
@@ -92,9 +95,11 @@ export default function Dashboard() {
     const c = localStorage.getItem("litmus_context");
     if (!c) { alert("Set up your client context first (onboarding)."); return; }
     let cfg: any = {}; try { cfg = JSON.parse(localStorage.getItem("litmus_config") || "{}").cfg ?? {}; } catch {}
+    // Target real accounts so the search returns in-ICP people (high scores), not random-industry VPs.
+    const targetCompanies = cfg.targetCompanies?.length ? cfg.targetCompanies : ["Stripe", "Ramp", "Notion", "Vercel", "Linear", "Brex", "Mercury"];
     setPhase("filtering"); setStage(0); setCount(FUNNEL[0].n);
     const res = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientContext: JSON.parse(c), topN: cfg.count ?? 5, destination: cfg.destination }) }).then((r) => r.json());
+      body: JSON.stringify({ clientContext: JSON.parse(c), topN: cfg.count ?? 5, destination: cfg.destination, targetCompanies }) }).then((r) => r.json());
     if (res.error) { alert(`Live run: ${res.error}`); setPhase("cloud"); return; }
     setProspects(res.prospects ?? []); setSource("live"); setState({});
     FUNNEL.forEach((f, i) => setTimeout(() => { setStage(i); tweenTo(f.n); }, i * 500));
@@ -108,6 +113,7 @@ export default function Dashboard() {
   }
 
   const live = prospects.filter((p) => state[p.signal_id] !== "killed");
+  const shown = focusId ? live.filter((p) => p.signal_id === focusId) : live;
 
   return (
     <div className="wrap">
@@ -148,12 +154,14 @@ export default function Dashboard() {
       ) : (
         <>
           <div className="subhead">
-            Top {live.length} of the day{brand ? ` · for “${brand}${brand.length >= 60 ? "…" : ""}”` : ""}{source === "live" ? " · live" : ""}
-            {" · "}<a onClick={() => setPhase("cloud")} style={{ cursor: "pointer" }}>← the firehose</a>
+            {focusId
+              ? <>Reviewing 1 prospect from Slack{" · "}<a onClick={() => setFocusId(null)} style={{ cursor: "pointer" }}>← all {live.length} prospects</a></>
+              : <>Top {live.length} of the day{brand ? ` · for “${brand}${brand.length >= 60 ? "…" : ""}”` : ""}{source === "live" ? " · live" : ""}
+                {" · "}<a onClick={() => setPhase("cloud")} style={{ cursor: "pointer" }}>← the firehose</a></>}
             {" · "}<Link href="/onboarding">edit context</Link>
           </div>
 
-          {live.map((p) => {
+          {shown.map((p) => {
             const st = state[p.signal_id]; const e = p.enriched;
             return (
               <article className="entry" key={p.signal_id}>

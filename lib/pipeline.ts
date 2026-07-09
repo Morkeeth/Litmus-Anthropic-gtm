@@ -7,10 +7,12 @@ import { peopleSearch, enrichContacts, reverseEmail } from "../src/fullenrich";
 import { normalizeFullEnrichProfile, mergeFullEnrichContactInfo } from "../src/normalize";
 import { scoreAll, type ScoreInput } from "../src/score";
 import { filterSuppressed, recordSurfaced } from "./ledger";
+import { loadFeedback } from "../src/feedback";
 
 // Score -> drop already-surfaced (cooldown) -> top N -> log the surfaced set. The dedup gate.
+// Feeds recent 👍/👎 feedback back into the scorer as few-shot — the learning loop.
 async function rankSuppress(inputs: ScoreInput[], ctx: ClientContext, topN: number): Promise<ScoredSignal[]> {
-  const scored = await scoreAll(inputs, { clientContext: ctx, topN });
+  const scored = await scoreAll(inputs, { clientContext: ctx, topN, feedbackExamples: loadFeedback(15) });
   const kept = filterSuppressed(scored).slice(0, topN);
   recordSurfaced(kept);
   return kept;
@@ -82,9 +84,11 @@ function profileToSignal(p: any): Signal {
   };
 }
 
-export async function runIcpWorkflow(ctx: ClientContext, topN = 7): Promise<ScoredSignal[]> {
+export async function runIcpWorkflow(ctx: ClientContext, topN = 7, targetCompanies?: string[]): Promise<ScoredSignal[]> {
   // 1. FullEnrich as the database: search people by ICP.
   const filters = await deriveFilters(ctx);
+  // Scoping to named target accounts yields in-ICP people (high icp_fit) instead of random-industry VPs.
+  if (targetCompanies?.length) filters.current_company_names = targetCompanies.map((v) => ({ value: v }));
   const { people } = await peopleSearch({ ...filters, limit: Math.max(topN * 2, 10) });
 
   // 2. Score every candidate (profile is enough for real/icp_fit/urgent).
