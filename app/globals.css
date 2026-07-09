@@ -120,6 +120,19 @@ input:focus, textarea:focus { outline: none; border-color: var(--fg); box-shadow
 .conn:last-child { border: none; }
 .dot { color: var(--faint); } .dot.ok { color: var(--hot); }
 
+/* Onboarding stepper + source cards */
+.stepper { display: flex; gap: 8px; padding: 20px 0 8px; font-family: var(--font-mono); font-size: 12px; flex-wrap: wrap; }
+.stepper .step { color: var(--faint); cursor: pointer; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; }
+.stepper .step.active { color: var(--primary-fg); background: var(--primary); border-color: var(--primary); }
+.stepper .step.done { color: var(--fg); }
+.source { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 10px 0; }
+.source-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.source-head b { font-size: 14px; } .src-role { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+.source-modes { display: flex; gap: 8px; margin-bottom: 10px; }
+.source-modes button { font-size: 12px; padding: 6px 12px; }
+.choices { display: flex; gap: 8px; flex-wrap: wrap; }
+.choices button { font-size: 13px; }
+
 footer { padding: 36px 0 60px; font-family: var(--font-mono); font-size: 11px; color: var(--faint); }
 
 @media (max-width: 560px) {
