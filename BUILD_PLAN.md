@@ -1,90 +1,73 @@
-# Litmus — Build Plan (initial version)
+# Litmus — Build Plan (v2, two-round pitch)
 
-The goal for Thursday is one feature, one demo path, both sponsors load-bearing, zero fake numbers. This plan describes the **initial version**: the smallest thing that makes a room of sales people nod.
+Goal for Thursday: **one primitive, one demo path with a shallow and a deep cut**, all three sponsors load-bearing, zero fake numbers, frozen at 17:30. Format is a **two-round live demo** (everyone pitches once; finalists pitch again), so we build ONE thing that has a 60s round-1 cut and a deeper round-2 cut. Architecture detail in `ARCHITECTURE.md`.
 
 ## Definition of done (the only bar that matters)
 
-At 18:00 we can show three signals side by side and, for each, a verdict with an evidence chain that a skeptical judge cannot poke a hole in:
-- one **REAL** (verifiable person in a real role, corroborated),
-- one **NOISE** (role no longer exists, or company unverifiable),
-- one **NEEDS A SECOND SIGNAL** (real person, no corroboration yet).
-
-The moment that wins: "this signal looks hot, but the person left that company four months ago. Noise. Here is the proof."
+By 17:30 we can, live, take a signal and return a **2×2 verdict** (truth × warmth) with an evidence chain a skeptical CRO cannot poke a hole in:
+- **REAL + COLD** — verifiable person, current role, corroborated, no known path → verified cold outreach.
+- **NOISE** — role no longer exists / person left → drop, with proof. **(round-1 hero: "hot signal, left four months ago, here's the record.")**
+- **REAL + WARM** — a champion move: person verified in new seat + we hold a relationship edge → warm intro via X. **(round-2 depth.)**
+- **UNPROVEN** — real person, one weak signal → watch.
 
 ## Scope: in vs out
 
-**In (build this):**
-- A single verification loop: signal in, verdict + evidence out.
-- FullEnrich integration on the synchronous search endpoints.
-- Three curated demo signals, pre-warmed and cached.
-- A clean single-screen UI: the three verdict cards with evidence chains.
+**In:** the `verify()` primitive (truth + warmth); FullEnrich sync search + enrich; **seeded** relationship DB (read-only, one lookup tool); 3–4 curated demo signals pre-warmed; single-page UI with 2×2 verdict cards; pre-warm cache.
 
-**Out (do not build):**
-- Real CRM read or write.
-- Outreach or sending of any kind.
-- Real-time Sillage ingestion as a dependency (mock it, swap if a key appears).
-- Auth, accounts, multi-user, persistence beyond a JSON cache.
-- Batch or scale. Three signals is the demo.
+**Out:** real CRM read/write; any actual sending; real-time Sillage as a dependency (mock it); crawling/building a relationship graph (seed only); auth, multi-user, persistence beyond JSON/SQLite cache; batch/scale.
 
-## Architecture
+## The two-round mapping (one build, two cuts)
+
+- **Round 1 (everyone, ~60–90s):** problem → solution → the **truth axis** and the **NOISE gotcha**. Bulletproof, rehearsed, cache-backed. This alone must be able to win.
+- **Round 2 (finalists, deeper):** the **warmth axis** — the champion who moved, verified and routed to a warm intro — plus "one engine, plug it on any surface" (CRM Truth as the second surface, spoken/shown lightly). This is where ambition pays; it only ships if round-1 is frozen solid first.
+
+## Architecture (summary — full in ARCHITECTURE.md)
 
 ```
-signal.json ─▶ verify loop (Claude agent) ─▶ verdict + evidence ─▶ UI cards
-                     │
-                     ├─ tool: search_company(name|domain)   FullEnrich /company/search  (sync)
-                     ├─ tool: search_people(company, role)   FullEnrich /people/search   (sync)
-                     └─ tool: enrich_contact(person)         FullEnrich enrich (poll wrapped inside)
+signal ─▶ Claude/Fable agent loop ─▶ { truth, warmth, action, evidence[] } ─▶ UI cards
+             ├─ search_company / search_people / enrich_contact   → FullEnrich (truth)
+             ├─ lookup_relationship(person)                       → Relationship DB (warmth, seeded)
+             └─ find_second_signal                                → corroboration
 ```
+Forced structured JSON out. Loop capped ~5 tool calls. Demo reads the pre-warm cache; one live call held ready.
 
-- **Brain:** one Claude agent loop (Sonnet). FullEnrich calls exposed as tools. Cap ~5 tool iterations to bound latency.
-- **Output:** forced structured JSON `{ verdict, confidence, evidence[] }`. The UI renders from JSON. Never parse prose live.
-- **Verdict rules (explicit, not vibes):**
-  - company unverifiable -> `NOISE`
-  - person not found in the claimed role now -> `NOISE`
-  - person confirmed, no corroborating second signal -> `NEEDS A SECOND SIGNAL`
-  - person confirmed + corroboration -> `REAL`
-  - each verdict must cite the exact FullEnrich fields that drove it.
+## Roles
 
-## The two hard risks and their fixes
+- **Pierre (heavy dev)** — owns the engine: FullEnrich client, the Fable agent loop + tool wiring, the seeded relationship DB + `lookup_relationship`, structured verdict output, the pre-warm cache. The hard core. Guards risks #1–3.
+- **Oscar** — architecture + verdict logic (the per-axis rules and citations), the demo signals (incl. the recognizable NOISE gotcha and the champion beat), pitch narrative, sponsor-fit framing. Guards risk #4.
+- **Desiree (delivery)** — owns "done by 17:30": the demo path + UI (2×2 cards + evidence), the round-1/round-2 script split, timeboxing, rehearsal, and keeping scope frozen. Guards risks #5–6.
 
-1. **Sillage has no public API.** Build against `mock/signals.json` from minute zero. Treat a live Sillage feed as a swap-in, never a dependency. If their API is flaky at demo time, we demo off the mock and it is invisible.
-2. **A live enrichment call is slow or empty on stage.** The **pre-warm cache** is non-negotiable. Before pitching, run the three demo signals through the real pipeline and cache every response to disk (`cache/{signal_id}.json`). The demo reads cache: instant and reliable even if wifi dies, still genuinely real data. Keep one live call ready to prove realness if a judge pushes.
-
-## Hour-by-hour (9:30 to 17:30)
+## Hour-by-hour (9:30 → 17:30)
 
 | Time | Milestone | Owner |
 |---|---|---|
-| 9:00 to 9:30 | Grab FullEnrich + Sillage keys at kickoff. Confirm FullEnrich base URL + auth. | all |
-| 9:30 to 11:00 | FullEnrich client working: sync `search_company` + `search_people` return real data. `GET /account/credits` logged. Lock the mock signal schema. | integration |
-| 11:00 to 13:00 | Claude verify loop: tools wired, structured JSON verdict, evidence chain, explicit verdict rules. | agent logic |
-| 13:00 to 13:30 | Lunch / integrate: loop calls real FullEnrich end to end on one signal. | all |
-| 13:30 to 15:00 | The three demo signals curated and passing. UI: three verdict cards + evidence. | ui + logic |
-| 15:00 to 16:00 | Pre-warm cache built and wired. Demo runs entirely from cache. | integration |
-| 16:00 to 16:30 | Swap in live Sillage feed if we have a key. Otherwise polish the mock path. | integration |
-| 16:30 to 17:30 | Freeze build. Cache everything. Rehearse the pitch three times. | all |
+| 9:00–9:30 | Grab FullEnrich + Sillage keys at kickoff. Confirm FullEnrich base URL + auth. Lock mock signal schema (incl. champion type). | all |
+| 9:30–11:00 | FullEnrich client: sync `search_company` + `search_people` return real data. `enrich_contact` poll wrapper. Credits logged. | Pierre |
+| 9:30–11:00 | Seed relationship DB (edges: person/company/type/strength/as_of) from a small CSV + a couple of champion-history rows. `lookup_relationship` tool. | Pierre |
+| 11:00–13:00 | Fable verify loop: tools wired (FullEnrich + relationship), **two-axis structured JSON verdict**, evidence chain, explicit per-axis rules. | Pierre + Oscar |
+| 13:00–13:30 | Lunch / integrate: loop runs real FullEnrich + relationship end-to-end on one signal. | all |
+| 13:30–15:00 | Curate 3–4 demo signals (REAL+COLD, NOISE gotcha, REAL+WARM champion, UNPROVEN). UI: 2×2 verdict cards + evidence. | Oscar + Desiree |
+| 15:00–16:00 | **Pre-warm cache built and wired.** Demo runs entirely from cache. Freeze round-1 cut first. | Pierre |
+| 16:00–16:30 | Swap in live Sillage feed if we have a key, else polish the mock path. Wire the round-2 depth beat. | Pierre |
+| 16:30–17:30 | Freeze build. Cache everything. Rehearse round-1 (60s) x3 and round-2 depth x2. | all |
 
-## Stack (proposed, change freely on day)
+## Stack
 
-- Node + TypeScript, single small server.
-- `@anthropic-ai/sdk` for the Claude loop, Sonnet.
-- FullEnrich via REST (base `https://app.fullenrich.com/api/v2`, `Authorization: Bearer`).
-- One static HTML page for the three cards. No framework needed for three cards.
-- A `cache/` dir of JSON for the pre-warm.
+- Node + TypeScript, one small server.
+- `@anthropic-ai/sdk`, model **Fable** (latency + verdict quality; fall back to Sonnet if quality dips on the two-axis reasoning).
+- FullEnrich via REST (`https://app.fullenrich.com/api/v2`, `Authorization: Bearer`) — **confirm endpoints at kickoff**.
+- Relationship DB: SQLite (or flat JSON if faster to seed).
+- One static HTML page for the verdict cards.
+- `cache/` dir of JSON for the pre-warm.
 
-## Pitch structure (rehearse this, not the code)
+## First tasks when the clock starts
 
-1. **Problem** (15s): intent data is half noise, reps chase ghosts, domains get burned.
-2. **Solution** (15s): Litmus is the precision layer. Signal in, truth out, with proof.
-3. **Demo** (45s): three cards. The gotcha: the hot signal that is actually dead.
-4. **Why us / why now** (15s): everyone sells more signals; the market's constraint moved to precision; both sponsors get better with us in the loop.
-
-## First tasks when the repo goes live Thursday
-
-- [ ] `npm init`, add `@anthropic-ai/sdk`, dotenv.
-- [ ] `.env` with `ANTHROPIC_API_KEY`, `FULLENRICH_API_KEY`, `SILLAGE_API_KEY` (if issued).
-- [ ] Implement `src/fullenrich.ts` sync search calls, test against one real company.
-- [ ] Implement `src/verify.ts` Claude loop with the three tools + structured output.
-- [ ] Curate the three demo signals in `mock/signals.json`.
-- [ ] Build the pre-warm cache script.
-- [ ] Single-page UI.
-- [ ] Rehearse.
+- [ ] `npm init`, add `@anthropic-ai/sdk`, dotenv, sqlite (or none if JSON).
+- [ ] `.env`: `ANTHROPIC_API_KEY`, `FULLENRICH_API_KEY`, `SILLAGE_API_KEY` (if issued).
+- [ ] `src/fullenrich.ts` sync search + enrich; test against one real company.
+- [ ] `src/relationship.ts` seed + `lookup_relationship`.
+- [ ] `src/verify.ts` Fable loop, five tools, two-axis structured output.
+- [ ] Curate demo signals in `mock/signals.json` (add champion + warm-path fields).
+- [ ] Pre-warm cache script.
+- [ ] Single-page 2×2 UI.
+- [ ] Freeze round-1, then rehearse both cuts.
