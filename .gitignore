@@ -1,4 +1,6 @@
 node_modules/
+.next/
+.vercel/
 .env
 .env.*
 !.env.example
@@ -7,4 +9,5 @@ data/feedback.jsonl
 dist/
 *.log
 .DS_Store
-# cache/ is committed on purpose once pre-warmed (wifi-proof demo data)
+next-env.d.ts
+# cache/ is committed on purpose once pre-warmed

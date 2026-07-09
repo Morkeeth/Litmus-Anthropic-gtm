@@ -2,21 +2,23 @@
   "name": "litmus",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "description": "The verification + routing layer for GTM. Signal in, truth + warmth out, with proof.",
+  "description": "The scoring layer for intent. Sillage firehose in, ranked prospects with drafts out.",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "verify": "tsx src/index.ts",
-    "prewarm": "tsx src/prewarm.ts",
-    "typecheck": "tsc --noEmit"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "latest",
-    "dotenv": "^16.4.5"
+    "@anthropic-ai/sdk": "^0.32.1",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.0",
-    "typescript": "^5.5.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
   }
 }
