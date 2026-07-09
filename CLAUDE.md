@@ -37,7 +37,7 @@ Env keys (`.env`, gitignored): `FULLENRICH_API_KEY` + `ANTHROPIC_API_KEY` (neede
 
 Source flows into one scorer (all funnel through score → suppress → top-N):
 - **Flow A (works now, no Sillage):** `lib/pipeline.ts` `runIcpWorkflow` — client context → derive FullEnrich `people/search` filters (Claude call) → score → rank → enrich winners. Backs `/api/run`.
-- **Flow B (the agent loop):** `lib/agent-loop.ts` — a batch of Sillage detections goes into a model-driven tool-use loop: triage on icp_fit/urgent first, spend FullEnrich credits only on plausible winners via the `verify_person` tool (budgeted), then one strict `emit_ranked` call for the whole batch. Same-account siblings fold into a carrier via `defers_to`.
+- **Flow B (the agent loop):** `lib/agent-loop.ts` — a batch of Sillage detections goes into a model-driven tool-use loop: triage on icp_fit and signal strength first, spend FullEnrich credits only on plausible winners via the `verify_person` tool (budgeted), then one strict `emit_ranked` call for the whole batch. Same-account siblings fold into a carrier via `defers_to`.
 - **Flows C/D/E (source-optional, `lib/pipeline.ts`):** CSV/CRM contacts, email list via FullEnrich reverse-lookup, HubSpot contacts (read-only).
 
 Layout:
@@ -52,7 +52,7 @@ Layout:
 
 ## Scoring model (the core contract)
 
-`score(signal) → { score 0-100, rank_reason, why_now, factors, drafts, evidence[] }`. Four factors, each cited: `real` and `icp_fit` are **gates** (dead or out-of-ICP scores ~0), `urgent` and `warm` are **boosts**: `score = 100·real·icp_fit·(0.4 + 0.35·urgent + 0.25·warm)`. **The model never emits the composite** — it emits factors via forced tool use and the score is recomputed in code (`composite()` in `score.ts` / agent-loop). `why_now` is the pinpointed trigger/what-changed/why-buying triple. The UI renders from JSON, never prose. Output is always cut to top 5–10; dumping everything recreates the firehose. The dashboard/CLI also show the score as a litmus reading (ACID = reactive, act now / NEUTRAL / BASE = inert, skip — pH-styled, on brand).
+`score(signal) → { score 0-100, rank_reason, why_now, factors, drafts, evidence[] }`. Three factors, each cited: `real` and `icp_fit` are **gates** (dead or out-of-ICP scores ~0), `warm` is the **boost**: `score = 100·real·icp_fit·(0.4 + 0.6·warm)`. `warm` is a composite the model blends and cites — `0.55·relationship_edge + 0.30·signal_strength + 0.15·corroboration` (way-in + how strong a signal Sillage surfaced + how many independent signals stack). We dropped a standalone `urgent`/recency factor: Sillage surfaces signals within a day, so freshness is constant and can't rank. **The model never emits the composite** — it emits factors via forced tool use and the score is recomputed in code (`composite()` in `score.ts` / agent-loop). `why_now` is the pinpointed trigger/what-changed/why-buying triple. The UI renders from JSON, never prose. Output is always cut to top 5–10; dumping everything recreates the firehose. The dashboard/CLI also show the score as a litmus reading (ACID = reactive, act now / NEUTRAL / BASE = inert, skip — pH-styled, on brand).
 
 ## Rules that aren't obvious from the code
 
