@@ -67,14 +67,14 @@ function loadCached() {
 
 function buildFixtures(): Record<string, Fixture> {
   const { detections, maxLead } = loadCached();
-  const [maxDet, danaDet] = detections; // both Ramp promotions — the natural duplicate-account pair
+  const [maxDet, danaDet] = detections; // both Northwind promotions — the natural duplicate-account pair
 
   const danaLead = {
     id: 1013453,
     first_name: "Dana",
     last_name: "Whitfield",
     linkedin_url: "https://linkedin.com/in/danawhitfield",
-    position: "VP of Sales @ Ramp",
+    position: "VP of Sales @ Northwind",
     location: "New York, New York, United States",
     company: maxLead.company,
   };
@@ -88,17 +88,17 @@ function buildFixtures(): Record<string, Fixture> {
       verify: {
         found: true,
         contact: {
-          full_name: "Max Freeman",
+          full_name: "Miles Fenwick",
           title: "SVP of Sales",
           is_current_role: true,
           role_started_at: "2026-06-01",
-          company: { name: "Ramp", domain: "ramp.com" },
-          linkedin_url: "https://linkedin.com/in/maxwellfreeman",
+          company: { name: "Northwind", domain: "northwind.example" },
+          linkedin_url: "https://linkedin.com/in/milesfenwick",
         },
       },
       expect: { shouldVerify: true, realMin: 0.9 },
     },
-    // 2. REAL CACHED — same account (Ramp), stale-role verify: FullEnrich still shows the old
+    // 2. REAL CACHED — same account (Northwind), stale-role verify: FullEnrich still shows the old
     // Senior Director title (index lag on the fresh promotion). Per the data-precedence rule the
     // person IS found at the claimed account, so real must be ≥ 0.5 — killing it as a
     // "contradiction" is the failure mode.
@@ -113,7 +113,7 @@ function buildFixtures(): Record<string, Fixture> {
           title: "Senior Director, Head of Commercial Sales",
           is_current_role: true,
           role_started_at: "2024-09-01",
-          company: { name: "Ramp", domain: "ramp.com" },
+          company: { name: "Northwind", domain: "northwind.example" },
           linkedin_url: "https://linkedin.com/in/danawhitfield",
         },
       },
@@ -488,7 +488,7 @@ Grade two dimensions, harshly (a generic output deserves a low score):
 
 1. why_now_quality (0-20): For each assessment — is why_now.trigger specific (dates, roles, numbers)? Is what_changed a real material change mined from the lead context, NOT a restatement of the raw signal? Is why_buying tied to what THIS seller sells? For thin signals (e.g. an 80-day-old newsletter click): does the output SAY PLAINLY there is no real trigger yet, instead of dressing the click up as one? Fabricated specifics are an automatic heavy penalty — but a fact is only fabricated if it appears in NONE of batch_input, verify_results, or seller_context.
 
-2. batch_judgment (0-15): Two signals are from the same account (Ramp) — did the agent treat them as one account story (cross-reference, prioritize one, avoid two near-identical pitches), or as unrelated rows? Is the top-${TOP_N} diverse rather than a monoculture of one account? Do rank_reasons read like a sharp rep's judgment across the batch (comparative, decisive) rather than per-row boilerplate? Are drafts free of fabricated shared history or product claims outside seller_context?
+2. batch_judgment (0-15): Two signals are from the same account (Northwind) — did the agent treat them as one account story (cross-reference, prioritize one, avoid two near-identical pitches), or as unrelated rows? Is the top-${TOP_N} diverse rather than a monoculture of one account? Do rank_reasons read like a sharp rep's judgment across the batch (comparative, decisive) rather than per-row boilerplate? Are drafts free of fabricated shared history or product claims outside seller_context?
 
 Call the grade tool exactly once.`;
 

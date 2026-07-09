@@ -51,7 +51,7 @@ Litmus uses the industry-standard **fit × intent × timing** lead-scoring frame
 
 ## The money moment (live, on real data)
 
-Sillage fires a promotion signal — *"VP Sales → SVP Sales at Ramp."* Looks hot. Litmus verifies it against FullEnrich — **the SVP title isn't confirmed.** Score: **11.** We don't let the rep chase it, and we show the proof. *Verify, don't trust.*
+Sillage fires a promotion signal — *"VP Sales → SVP Sales at Northwind."* Looks hot. Litmus verifies it against FullEnrich — **the SVP title isn't confirmed.** Score: **11.** We don't let the rep chase it, and we show the proof. *Verify, don't trust.*
 
 ## Architecture — one headless engine, four doors
 

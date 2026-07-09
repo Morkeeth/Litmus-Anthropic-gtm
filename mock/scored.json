@@ -37,7 +37,7 @@
         "name": "Ramp"
       },
       "work_email": {
-        "email": "s.chen@ramp.com",
+        "email": "s.chen@ramp.example",
         "status": "DELIVERABLE"
       },
       "mobile": {
@@ -126,7 +126,7 @@
         "name": "Layer"
       },
       "work_email": {
-        "email": "tomas@layerhq.com",
+        "email": "tomas@layerhq.example",
         "status": "DELIVERABLE"
       },
       "mobile": {
@@ -205,7 +205,7 @@
         "name": "Cadence"
       },
       "work_email": {
-        "email": "p.nair@cadence.io",
+        "email": "p.nair@cadence.example",
         "status": "DELIVERABLE"
       }
     },
@@ -254,7 +254,7 @@
         "name": "Fathom"
       },
       "work_email": {
-        "email": "daniel@fathom.co",
+        "email": "daniel@fathom.example",
         "status": "RISKY"
       }
     },
@@ -356,7 +356,7 @@
         "name": "Ford & Co"
       },
       "work_email": {
-        "email": "lena@fordco.studio",
+        "email": "lena@fordco.example",
         "status": "DELIVERABLE"
       }
     },
