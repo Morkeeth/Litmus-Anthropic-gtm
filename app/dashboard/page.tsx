@@ -102,12 +102,16 @@ export default function Dashboard() {
   async function runLive() {
     const c = localStorage.getItem("litmus_context");
     if (!c) { alert("Set up your client context first (onboarding)."); return; }
-    let cfg: any = {}; try { cfg = JSON.parse(localStorage.getItem("litmus_config") || "{}").cfg ?? {}; } catch {}
+    let cfg: any = {}, conns: any = {};
+    try { const g = JSON.parse(localStorage.getItem("litmus_config") || "{}"); cfg = g.cfg ?? {}; conns = g.conns ?? {}; } catch {}
+    // Derive the pipeline source from the connections set in onboarding:
+    // Sillage connected -> the agent loop (verify via FullEnrich); else HubSpot contacts; else FullEnrich ICP search.
+    const source = conns.sillage?.connected ? "sillage-agent" : conns.hubspot?.connected ? "hubspot" : undefined;
     // Target real accounts so the search returns in-ICP people (high scores), not random-industry VPs.
     const targetCompanies = cfg.targetCompanies?.length ? cfg.targetCompanies : ["Stripe", "Ramp", "Notion", "Vercel", "Linear", "Brex", "Mercury"];
     setPhase("filtering"); setStage(0); setCount(FUNNEL[0].n);
     const res = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientContext: JSON.parse(c), topN: cfg.count ?? 5, destination: cfg.destination, targetCompanies }) }).then((r) => r.json());
+      body: JSON.stringify({ clientContext: JSON.parse(c), topN: cfg.count ?? 5, source, destination: cfg.destination, targetCompanies }) }).then((r) => r.json());
     if (res.error) { alert(`Live run: ${res.error}`); setPhase("cloud"); return; }
     setProspects(res.prospects ?? []); setSource("live"); setState({});
     FUNNEL.forEach((f, i) => setTimeout(() => { setStage(i); tweenTo(f.n); }, i * 500));
