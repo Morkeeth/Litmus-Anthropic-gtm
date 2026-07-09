@@ -91,6 +91,8 @@ export interface Feedback {
 export interface ScoredSignal {
   signal_id: string;
   score: number; // 0..100 composite
+  signal_type?: string; // carried for the suppression ledger (detect signal change)
+  detected_at?: string; // carried for the suppression ledger (detect fresher signal)
   rank_reason: string; // the one sentence a rep reads — written by the model
   factors: ScoreFactor[];
   enriched?: EnrichedContact;

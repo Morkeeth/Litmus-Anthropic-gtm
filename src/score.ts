@@ -118,6 +118,8 @@ export async function scoreSignal(input: ScoreInput, cfg: ScoreConfig): Promise<
   return {
     signal_id: input.signal.signal_id,
     score: composite(factors),
+    signal_type: input.signal.type,
+    detected_at: input.signal.detected_at,
     rank_reason: out.rank_reason ?? "",
     factors,
     enriched: input.enriched,
