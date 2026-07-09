@@ -63,13 +63,27 @@ export const slackSink: Sink = {
 // No Enterprise / no classic cards. Fallback that works on ANY free portal:
 // PATCH custom properties on the contact + post a Note via the CRM API.
 // Env: HUBSPOT_TOKEN (private-app access token)
+// Writes litmus_score / litmus_reason / litmus_why_now onto matched contacts.
+// GUARDED: writes to a real CRM only when HUBSPOT_WRITE_ARMED=1. Matches by email.
 export const hubspotSink: Sink = {
   name: "hubspot",
-  async push(_items) {
-    // TODO stretch: PATCH /crm/v3/objects/contacts/{id} { properties: { litmus_score, litmus_reason } }
-    //             + POST /crm/v3/objects/notes with association to the contact.
-    // Modern App Card (React UI extension in a free Dev Test Account) is the wow version if time allows.
-    throw new Error("TODO stretch: HubSpot sink (PATCH properties + Note)");
+  async push(items) {
+    if (process.env.HUBSPOT_WRITE_ARMED !== "1") {
+      throw new Error("HubSpot write not armed — set HUBSPOT_WRITE_ARMED=1 to write to the CRM");
+    }
+    const { ensureLitmusProperties, searchContactByEmail, patchContact } = await import("./hubspot");
+    await ensureLitmusProperties();
+    for (const s of items) {
+      const email = s.enriched?.work_email?.email;
+      if (!email) continue;
+      const c = await searchContactByEmail(email);
+      if (!c) continue;
+      await patchContact(c.id, {
+        litmus_score: String(s.score),
+        litmus_reason: s.rank_reason,
+        litmus_why_now: s.why_now ? `${s.why_now.trigger} — ${s.why_now.why_buying}` : "",
+      });
+    }
   },
 };
 

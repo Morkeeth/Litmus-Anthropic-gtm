@@ -182,6 +182,37 @@ export async function runFromSillage(ctx: ClientContext, topN = 7): Promise<Scor
   return rankSuppress(inputs, ctx, topN);
 }
 
+// Flow E: HubSpot contacts as the source (read-only). Score your existing CRM database.
+export async function runFromHubspot(ctx: ClientContext, topN = 7): Promise<ScoredSignal[]> {
+  const { listContacts } = await import("../src/hubspot");
+  const contacts = await listContacts(50);
+  const inputs: ScoreInput[] = contacts.map((c: any) => {
+    const p = c.properties ?? {};
+    const full = [p.firstname, p.lastname].filter(Boolean).join(" ") || p.email || "Contact";
+    return {
+      signal: {
+        signal_id: `hs_${c.id}`,
+        agent: "account_based_signals",
+        type: "crm_contact",
+        category: "first_party",
+        account: { name: p.company ?? "", domain: p.website, icp_match: true },
+        contact: { full_name: full, role: p.jobtitle },
+        summary: `HubSpot contact: ${p.jobtitle ?? "role"} at ${p.company ?? "company"}`,
+        detected_at: new Date().toISOString(),
+        raw: c,
+      } as Signal,
+      enriched: {
+        full_name: full,
+        title: p.jobtitle,
+        is_current_role: true,
+        company: { name: p.company },
+        work_email: p.email ? { email: p.email, status: "UNVERIFIED" } : undefined,
+      } as EnrichedContact,
+    };
+  });
+  return rankSuppress(inputs, ctx, topN);
+}
+
 // Flow D: a list of emails (webinar, export). FullEnrich reverse-lookup -> full profile -> score.
 // Showcases FullEnrich's reverse-email feature. Needs a FullEnrich key.
 export async function runFromEmails(ctx: ClientContext, emails: string[], topN = 7): Promise<ScoredSignal[]> {
