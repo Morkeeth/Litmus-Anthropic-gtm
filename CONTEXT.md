@@ -2,6 +2,13 @@
 
 Team state. Pull, read this, jump in. Submission day — Station F Agentic GTM, Jul 2026.
 
+## ▶ NEXT SESSION — pick up here
+Everything below is built, committed, pushed, deployed. The only open thread:
+1. **Create the Supabase tables.** The project MCP (`supabase`, project_ref rqdkclamlyajuyjlrztw) is now authenticated and will load on session start — say **"create the supabase tables"** and use `apply_migration` to create `brief_cache` + `feedback` (schema in the Supabase section below). *Or* run the 2-line SQL in the dashboard. File fallback covers it until then — nothing is blocked.
+2. Then **verify**: fire a live run (or `curl -X POST .../api/run`), confirm it lands in `brief_cache`, and the dashboard reads it.
+3. **Demo prep:** rehearse the run order (Demo data → Run today's brief → deliver to Slack/Telegram/HubSpot → send email/Telegram → rate it). Pitch docs in Obsidian `01 Projects/Hackathons/litmus-*` (scoring-pitch, pitch, voice-brief).
+Keys (Anthropic/FullEnrich/Sillage/Unipile/HubSpot/xAI/Supabase) are in local `.env`. Send is armed (`LITMUS_SEND_ARMED=1`, `HUBSPOT_WRITE_ARMED=1`) — to owner's own accounts only.
+
 ## What Litmus is
 The scoring layer for intent. From 8,000 CRM contacts, cleaned by FullEnrich and the latest signals from Sillage, powered by Anthropic — Litmus gives you the sharpest outreach and the 3 perfect prospects of the day. Track 1 — Acquisition.
 

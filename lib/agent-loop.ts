@@ -281,12 +281,26 @@ export async function agentLoop(
 
 export async function runSillageAgent(ctx: ClientContext, topN = 5): Promise<AgentScoredSignal[]> {
   // 1. Deterministic fetch: detections + their leads (real payload shape, see data/sillage-samples.json).
-  const { data } = await listSignals({ page_size: 50 });
+  //    The live Sillage feed is intermittent (no stable public API — it returns 0 signals on one
+  //    call and real data on the next). If it comes back empty or errors, fall back to the captured
+  //    sample payloads so the demo path is deterministic and NEVER empty. Live is a swap-in, never a
+  //    hard dependency.
+  let data = await listSignals({ page_size: 50 }).then((r) => r?.data).catch(() => undefined);
+  let sampleLeads: Map<number, any> | undefined;
+  if (!data?.length) {
+    const samples = JSON.parse(readFileSync(join(process.cwd(), "data/sillage-samples.json"), "utf8"));
+    data = (samples?.list_signals?.data ?? []) as any[];
+    const gl = samples?.get_lead?.data;
+    sampleLeads = new Map(gl ? [[gl.id, { data: gl }]] : []);
+    console.error("[litmus] live Sillage feed empty — using data/sillage-samples.json fallback");
+  }
   if (!data?.length) return [];
 
   const entries: BatchEntry[] = [];
   for (const det of data) {
-    const lead = det.lead_id ? await getLead(det.lead_id).catch(() => null) : null;
+    const lead = sampleLeads
+      ? (det.lead_id ? sampleLeads.get(det.lead_id) ?? null : null)
+      : det.lead_id ? await getLead(det.lead_id).catch(() => null) : null;
     const signal = normalizeSillageDetection(det, lead);
     const l = lead?.data ?? {};
     const sillageLead: EnrichedContact | undefined = lead
