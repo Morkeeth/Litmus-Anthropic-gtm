@@ -1,0 +1,65 @@
+{
+  "label": "final",
+  "avg": 94,
+  "avgBy": {
+    "contract": 25,
+    "calibration": 25,
+    "triage": 15,
+    "why_now": 16,
+    "batch_judgment": 13
+  },
+  "grades": [
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 16,
+        "batch_judgment": 13
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 94,
+      "totalMax": 100,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strongest entries (Ruiz, Freeman) have specific dated triggers, correctly mined what_changed (role scope/seat change) from lead context, and tie why_buying to Litmus's stated value props without fabricating facts beyond seller_context/case study. Correctly killed the two unverifiable/departed signals (Vanta, Clay) per policy, and correctly zeroed the disqualified bakery/student rows. The one weak spot: sil_900003 (Braze click) is handled well by explicitly saying \"no real trigger yet\" rather than dressing it up, exactly per spec — good restraint. Batch judgment is strong: the two Ramp signals were explicitly cross-referenced (sil_1823335 defers to sil_1823336 as sibling/account story rather than duplicate pitch), and the top slots are diverse (Attio warm CRO, Ramp SVP, thin Braze) rather than a Ramp monoculture — minor deduction only because the deferred Ramp entry still consumes a full slot with its own draft-less entry rather than being fully merged/suppressed, and urgency scoring on Freeman (5 weeks, called \"just past 30-day window\" but still scored 0.8) is slightly generous/inconsistent with a stricter freshness read.</notes>\n</invoke>\n"
+    },
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 16,
+        "batch_judgment": 13
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 94,
+      "totalMax": 100,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strongest points: sil_900006 (Attio/CRO) and sil_1823336 (Ramp SVP) both have specific dates, tie to the actual verify_results, and why_buying is grounded in seller_context's why-good rules rather than generic fluff; the newsletter click (sil_900003) correctly says plainly there's no real trigger and caps urgent at 0.1 instead of dressing it up. Minor overreach: calling Attio \"our own case study\" and claiming its sales team is \"already using Litmus\" in the trigger/draft is a slight stretch beyond seller_context (the case study is about Attio's outcome, not proof the CRO herself will audit the stack), and \"new CRO typically audits the GTM stack in first quarter\" is an unsourced generalization presented as fact. Batch judgment is good: the two Ramp signals are correctly recognized as one account story, with sil_1823335 explicitly deferring to sil_1823336 and citing it as corroboration rather than running two duplicate pitches — solid cross-referencing. Top-3 is reasonably diverse (Attio, Ramp, Braze) rather than a Ramp monoculture, and kills/disqualifications are crisp and decisive. Drafts stay within seller_context claims (Attio 80% stat, HubSpot/Slack not overclaimed) and don't fabricate shared history beyond the given warm_path.</notes>\n</invoke>\n"
+    }
+  ]
+}

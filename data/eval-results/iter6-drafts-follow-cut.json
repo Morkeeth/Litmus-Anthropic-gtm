@@ -1,0 +1,65 @@
+{
+  "label": "iter6-drafts-follow-cut",
+  "avg": 93.5,
+  "avgBy": {
+    "contract": 25,
+    "calibration": 25,
+    "triage": 15,
+    "why_now": 16,
+    "batch_judgment": 12.5
+  },
+  "grades": [
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 17,
+        "batch_judgment": 13
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 95,
+      "totalMax": 100,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strongest points: Attio (Elena Ruiz) and Ramp (Max Freeman) why_nows are specific, dated, and tie what_changed to seller's value prop without fabrication; the Braze click is correctly flagged as a thin signal with no real trigger and urgent=0, exactly per spec. Vanta and Clay kills are handled honestly via verify_results rather than invented facts. Minor deduction: Max Freeman's why_buying stretches \"SVP promotion + active hiring line in title\" into a full \"org reshuffle\" narrative that's plausible but slightly oversold as two independent triggers rather than one bundled signal. Batch judgment is strong — the two Ramp signals are correctly merged into one account story with sil_1823335 deferring to sil_1823336, avoiding duplicate near-identical pitches, and the top-3 is diverse (Attio CRO, Ramp SVP, Braze thin-signal) rather than a single-account monoculture; rank_reasons are explicitly comparative (\"edges out Sam Torres's stale click,\" \"lacks Elena Ruiz's warm path\"), showing real cross-batch reasoning. Small ding: the merge logic, while smart, still produces a full evidence/factors block for the deferred signal that reads a bit like boilerplate rather than being fully collapsed.</notes>\n</invoke>\n"
+    },
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 15,
+        "batch_judgment": 12
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 92,
+      "totalMax": 100,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strongest case (Attio/Elena Ruiz) is well-grounded: verified role, warm_path taken directly from batch_input, why_buying ties to the actual case study asset. Ramp SVP promotion is verified and reasonably argued, correctly linking the sibling Dana Whitfield signal as one coordinated account story via defers_to — good batch judgment, avoiding duplicate pitches. Kills for Vanta (is_current_role=false) and Clay (found=false) are handled correctly and conservatively, not fabricating certainty. The Braze newsletter click is correctly flagged as stale/thin with urgent=0 and plain \"nothing material\" language, matching the standard's instruction to say so plainly rather than dress it up — though it's odd it still gets a full draft and a top-3 slot by default rather than being deprioritized further; the rank_reason for it self-consciously admits it's not hot, which is honest but shows the batch lacks enough real signal diversity. Bakery and student are correctly disqualified with no wasted verification. Minor deduction: the Ramp pitch to Max references Dana's promotion as if it's a definitive fact even though sil_1823335 itself is unverified (real=0.5), which slightly overstates certainty in the outbound draft. Overall solid, specific, non-generic outputs with only small overreach issues.</notes>\n</invoke>\n"
+    }
+  ]
+}

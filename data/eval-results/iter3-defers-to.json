@@ -1,0 +1,66 @@
+{
+  "label": "iter3-defers-to",
+  "avg": 94.5,
+  "avgBy": {
+    "contract": 25,
+    "calibration": 26,
+    "triage": 15,
+    "why_now": 15.5,
+    "batch_judgment": 13
+  },
+  "grades": [
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 15,
+        "batch_judgment": 13
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 25,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 93,
+      "totalMax": 100,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strong overall: Attio/Ruiz why_now correctly ties CRO move + warm path + case-study account to seller's offering without fabricating facts beyond the warm_path field; Ramp/Freeman correctly mines the hiring-note detail as what_changed rather than restating the promotion; Vanta correctly killed as false positive with real=0; bakery/student correctly zeroed with plain disqualifier language. Weakest: the Braze newsletter-click entry states \"no evidence of a new trigger\" (good per rules) but still assigns real=0.5 and writes a full why_now/draft-free entry rather than being even more blunt that this is dead weight; Clay/Priya's why_buying (\"re-evaluating the prospect-scoring stack\") is a slight overreach/inference dressed as fact given real=0.5 unverified. Batch judgment is good: the two Ramp signals are explicitly cross-referenced via defers_to, ranked as one account story, and drafts avoid duplicating outreach — exactly what the rubric wants; top-3 is diverse (Attio, Ramp, Clay) rather than a Ramp monoculture; rank_reasons are comparative (\"Second:\", \"trails Elena's warm path\") showing real batch-level reasoning; drafts stay within seller_context claims (Attio case study, HubSpot/Slack not overclaimed) and don't fabricate shared history beyond the given warm_path. Minor deduction because the Priya draft's \"likely re-evaluating\" framing and Sam Torres being kept as a scored (rather than more sharply dismissed) row slightly dilute the harsh triage the standards call for."
+    },
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 16,
+        "batch_judgment": 13
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 96,
+      "totalMax": 102,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_1823335",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strong overall: each why_now uses concrete dates/tenure, ties what_changed to material shifts (CRO budget ownership, hiring wave, RevOps stack audit), and why_buying maps cleanly to Litmus's value prop without fabricating facts beyond the batch (warm path, hiring flag, and case study are all sourced from input). Thin/disqualified signals (newsletter click, bakery, MBA student) are correctly called out as non-triggers rather than dressed up, which is exactly the desired behavior. Main weaknesses: the Dana Whitfield entry stretches slightly by inferring \"index lag, not departure\" from FullEnrich showing her pre-promotion title — a plausible but somewhat speculative inference not explicitly confirmed by evidence; and Ramp's \"why-good\" reasoning for Max Freeman treats the hiring-tag text as a corroborated signal without independent verification, which is a minor overreach given the same rigor is applied elsewhere (e.g., Priya's real=0.5 for unverified). Batch judgment is excellent: the two Ramp signals are explicitly cross-referenced and folded into a single carrier (sil_1823335 defers to sil_1823336), avoiding duplicate near-identical pitches, and the top-3 spans three distinct accounts (Attio, Ramp, Clay) with clearly comparative, decisive rank_reasons that explicitly rank against each other rather than reading as isolated boilerplate."
+    }
+  ]
+}

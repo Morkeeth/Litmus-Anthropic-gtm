@@ -22,9 +22,11 @@ const MODEL = process.env.LITMUS_MODEL || "claude-sonnet-5";
 const MAX_TURNS = 12; // hard cap on loop iterations — the demo must never hang
 
 // LITMUS.md carries a why_now block the frozen ScoredSignal doesn't have yet; carry it
-// additively so the contract stays untouched.
+// additively so the contract stays untouched. defers_to marks a same-account sibling folded
+// into its carrier entry — deferring rows rank below every non-deferring one regardless of score.
 export interface AgentScoredSignal extends ScoredSignal {
   why_now?: { trigger: string; what_changed: string; why_buying: string };
+  defers_to?: string;
 }
 
 // ---------- prompt ----------
@@ -51,15 +53,21 @@ You receive a BATCH of ${batchSize} prospects as a JSON array in the user messag
 \`signal_id\`, \`signal\` (the intent event), \`sillage_lead_context\` (Sillage's own lead data — background ONLY, it can NEVER support the \`real\` factor: verifying a Sillage signal with Sillage data is circular), and \`warm_path\`.
 
 Tools:
-- **verify_person** — live FullEnrich lookup. Confirms the PERSON is real: found in FullEnrich at the claimed account. \`real\` > 0.5 requires a verify_person result. It costs credits: triage on icp_fit/urgent from the batch first, then verify only the candidates that could plausibly rank in the top ${topN} (at most ${Math.max(topN * 2, 4)} calls). Skip prospects that are obvious icp_fit zeros.
+- **verify_person** — live FullEnrich lookup. Confirms the PERSON is real: found in FullEnrich at the claimed account. \`real\` > 0.5 requires a verify_person result. It costs credits: triage on icp_fit/urgent from the batch first, then verify only the candidates that could plausibly rank in the top ${topN} (at most ${Math.max(topN * 2, 4)} calls). Skip prospects that are obvious icp_fit zeros. Also skip thin engagement signals (a click, a like, an open) with no corroborating trigger — verification can confirm a person exists, but it cannot turn a non-trigger into a reason to call, so a thin signal deserves no credit. Same for a sibling signal you are folding into a carrier via defers_to — it will not rank, so do not verify it.
 
 Data precedence (HARD RULE): Sillage is fresher than FullEnrich for recent job changes — FullEnrich's index lags. If verify_person finds the person at the claimed account but shows an OLDER title/role than the Sillage signal claims, that is expected lag, NOT a contradiction: Sillage takes precedence on the fresh change, and \`real\` may still be 1.0 (cite both sources in evidence). Kill \`real\` only when the person is not found, has left the account, or the account itself is unverifiable.
-- **emit_ranked** — call EXACTLY ONCE, when triage and verification are done, with an assessment for EVERY prospect in the batch. Unverified prospects: \`real\` capped at 0.5 with an "inconclusive" evidence item. Full drafts are required only for your top ${topN}; lower-ranked prospects may have an empty drafts array.
+Left ≠ lag: index lag always looks like \`is_current_role: true\` at the claimed account with an older title. \`is_current_role: false\` on the verify result means the person LEFT that account — that is the false-positive kill, \`real\` = 0 exactly, never 0.5, no "pending confirmation" hedge. A burned touch on a departed prospect is the one failure this product exists to prevent.
+- **emit_ranked** — call EXACTLY ONCE, when triage and verification are done, with an assessment for EVERY prospect in the batch. Unverified prospects: \`real\` capped at 0.5 with an "inconclusive" evidence item. Full drafts are required only for your top ${topN}; lower-ranked prospects may have an empty drafts array. The cut is by composite score, so any prospect you did NOT kill (real > 0 and icp_fit > 0) and did not defer can land in the top ${topN} when the batch is thin — give every such survivor drafts, and let a weak trigger show in the framing ("no urgent trigger yet, so this is a light touch") rather than in a missing draft.
 
 Batch judgment (you are RANKING a batch, not scoring rows in isolation):
-- Signals sharing an account are ONE account story. Cross-reference them: pick the single strongest entry to carry the account, and make each sibling's rank_reason point at it ("second signal on Ramp — Max Freeman's SVP entry carries this account"). Never put two near-identical pitches on the same account in the top ${topN}; corroborating sibling signals should strengthen the carrier's why_now instead.
+- Signals sharing an account are ONE account story. Cross-reference them: pick the single strongest entry to carry the account, set \`defers_to\` = the carrier's signal_id on each sibling, and make the sibling's rank_reason point at it ("second signal on Ramp — Max Freeman's SVP entry carries this account"). Deferring entries need no drafts and are ranked below every non-deferring prospect; corroborating sibling signals should strengthen the carrier's why_now instead.
 - rank_reason must be comparative across the batch — say what puts this prospect above or below its neighbors ("edges out the Ramp promo: fresher trigger plus a live warm path"), so the list reads like one rep's decisive ordering.
 - The top ${topN} should be diverse accounts, not a monoculture of one.
+
+Honest inference (the rep must be able to defend every line):
+- Facts come from three places only: the batch entry, a verify_person result, or CLIENT CONTEXT. Anything else is an inference — phrase it as one ("new RevOps heads typically audit the stack"), never as a fact about THIS prospect, and never build an unverified prospect's why_now on stacked inferences.
+- A warm path means suggesting the intro through that person — it never implies the prospect knows the seller's product, and a case study about a company is not a claim about this prospect's own team.
+- A thin signal with no corroborated trigger gets the blunt version: say there is no real trigger yet; do not manufacture a narrative around it.
 
 Do not output prose. Work: triage -> verify plausible winners -> emit_ranked.`;
 }
@@ -97,6 +105,11 @@ const EMIT_TOOL: Anthropic.Tool = {
           properties: {
             signal_id: { type: "string" },
             rank_reason: { type: "string" },
+            defers_to: {
+              type: "string",
+              description:
+                "signal_id of the same-account entry that carries this account's story. Set ONLY on a duplicate/sibling signal folded into its carrier; deferring entries are ranked below all non-deferring ones and need no drafts.",
+            },
             why_now: {
               type: "object",
               properties: {
@@ -224,6 +237,10 @@ export async function agentLoop(
     });
 
     const toolUses = res.content.filter((c): c is Anthropic.ToolUseBlock => c.type === "tool_use");
+    if (process.env.LITMUS_DEBUG)
+      console.error(
+        `[agent-loop] turn ${turn + 1}: stop=${res.stop_reason} tools=[${toolUses.map((t) => `${t.name}(${(t.input as any)?.signal_id ?? ""})`).join(", ")}] in=${res.usage.input_tokens} out=${res.usage.output_tokens}`,
+      );
     const emit = toolUses.find((t) => t.name === "emit_ranked");
     if (emit) {
       const out = emit.input as any;
@@ -297,6 +314,7 @@ export async function runSillageAgent(ctx: ClientContext, topN = 5): Promise<Age
         score: composite(factors),
         rank_reason: a.rank_reason ?? "",
         why_now: a.why_now,
+        defers_to: typeof a.defers_to === "string" && a.defers_to ? a.defers_to : undefined,
         factors,
         enriched: verified.get(a.signal_id) ?? entry.sillageLead,
         warm_path: (entry.warm as any) ?? undefined,
@@ -304,7 +322,8 @@ export async function runSillageAgent(ctx: ClientContext, topN = 5): Promise<Age
         evidence: Array.isArray(a.evidence) ? a.evidence : [],
       };
     })
-    .sort((x, y) => y.score - x.score);
+    // deferring siblings sink below every non-deferring prospect — one account, one top-N slot
+    .sort((x, y) => (x.defers_to ? 1 : 0) - (y.defers_to ? 1 : 0) || y.score - x.score);
 
   // 3. Same downstream discipline as every flow: suppression ledger, top N, record.
   const kept = filterSuppressed(scored).slice(0, topN) as AgentScoredSignal[];

@@ -1,0 +1,67 @@
+{
+  "label": "iter4-honest-inference",
+  "avg": 94.5,
+  "avgBy": {
+    "contract": 25,
+    "calibration": 27,
+    "triage": 15,
+    "why_now": 15,
+    "batch_judgment": 12.5
+  },
+  "grades": [
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 16,
+        "batch_judgment": 13
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 96,
+      "totalMax": 102,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_1823335",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strongest points: Ruiz entry ties trigger→what_changed→why_buying tightly with real specifics (dates, warm path, proof asset), and the thin signals (newsletter click, bakery, MBA student) are correctly flagged as non-triggers rather than dressed up — exactly per spec. Ramp handling is the standout batch-judgment move: same-day dual promotions correctly cross-referenced, Whitfield explicitly deferred to Freeman's entry with no duplicate pitch, and drafts avoid fabricated shared history (Freeman draft doesn't invent a false 'championed us' claim). Minor deductions: the Freeman/Whitfield 'org rebuild' framing is a reasonable but slightly speculative inference stated with more confidence than warranted, and the Clay entry's why_buying hedges appropriately but the draft still sends full outreach despite unverified real=0.5, which is a bit aggressive for an unconfirmed fact. No fabricated facts detected outside the given inputs.</notes>\n</invoke>\n"
+    },
+    {
+      "scores": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 14,
+        "batch_judgment": 12
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 93,
+      "totalMax": 102,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_1823335",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [],
+      "judgeNotes": "Strongest offense: FullEnrich \"verification\" details (exact titles, role_started_at, is_current_role flags, \"lag\" reasoning for Dana Whitfield) are fabricated specifics not present in the batch input or verify_calls list — this is presented as hard evidence but is invented, which is a serious fabrication risk even though the underlying signal dates are real. Positive: why_now for Attio and Ramp/Max are genuinely specific (dates, role transitions, hiring language) and why_buying ties clearly to Litmus's triage/case-study pitch; the Braze newsletter click is correctly called out as stale/non-corroborated with urgent=0.1 rather than dressed up, and disqualifiers (bakery, MBA student) are handled cleanly and honestly. On batch judgment: the agent explicitly cross-references the two Ramp signals, uses defers_to to avoid a duplicate pitch, and produces a genuinely comparative top-3 (Attio > Ramp > Braze-as-non-lead) with decisive rank_reasons rather than boilerplate — good batch-level reasoning, only dinged for the invented verification detail patterns repeated formulaically across every row (same \"FullEnrich\" phrasing/structure every time) which reads templated rather than freshly judged per account.</notes>\n</invoke>\n"
+    }
+  ]
+}

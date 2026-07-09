@@ -1,0 +1,71 @@
+{
+  "label": "iter2-left-vs-lag",
+  "avg": 89.5,
+  "avgBy": {
+    "contract": 21,
+    "calibration": 27,
+    "triage": 15,
+    "why_now": 14.5,
+    "batch_judgment": 12
+  },
+  "grades": [
+    {
+      "scores": {
+        "contract": 21,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 14,
+        "batch_judgment": 12
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 89,
+      "totalMax": 102,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_1823335",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [
+        "[-4 contract] top-3 missing email drafts: sil_1823335"
+      ],
+      "judgeNotes": "Strongest issue: sil_900006 (Attio CRO) draft claims \"your own sales team is already proof Litmus cuts prospect-triage time 80%\" — conflating the Attio case study (a proof asset about Attio generically) with a specific claim that Elena's own team is currently running Litmus, which is not established in the input; this is a fabrication risk that should have been flagged, not asserted twice (rank_reason and body). Ramp handling is a clear strength: correctly identified same-day/same-account dupe, kept Max Freeman as primary carrier with explicit note, suppressed a redundant draft for Dana Whitfield, and gave a comparative rank_reason — good batch judgment. Thin/disqualified signals (newsletter click, bakery, student) are handled well: plainly stated no real trigger, ICP-gated correctly, no dressed-up urgency. Vanta correctly killed on FullEnrich mismatch with clear reasoning. Minor deduction on why_now for Clay/Priya where \"typically means auditing and replacing the GTM tool stack\" is a reasonable inference but stated with more confidence than warranted given unverified real=0.5."
+    },
+    {
+      "scores": {
+        "contract": 21,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 15,
+        "batch_judgment": 12
+      },
+      "max": {
+        "contract": 25,
+        "calibration": 27,
+        "triage": 15,
+        "why_now": 20,
+        "batch_judgment": 15
+      },
+      "total": 90,
+      "totalMax": 102,
+      "verifyCalls": [
+        "sil_1823336",
+        "sil_1823335",
+        "sil_900001",
+        "sil_900002",
+        "sil_900006"
+      ],
+      "notes": [
+        "[-4 contract] top-3 missing email drafts: sil_1823335"
+      ],
+      "judgeNotes": "Strong overall: verify_person checks are used correctly to kill false positives (Vanta, Clay), the stale Braze click is honestly flagged as thin (\"Nothing else in the batch corroborates... reads as cold, generic touch\") rather than dressed up, and disqualifiers (bakery, MBA student) are handled cleanly with no fabrication. Ramp's two signals are explicitly cross-referenced as one account story with Max prioritized over Dana and drafts withheld for the sibling — good batch discipline. Weakest points: the Attio rank_reason/why_buying leans on \"champion-reactivation\" and \"easiest conversation\" framing that oversells the warm_path (Karim championed Litmus at Salesloft, not necessarily transferable to Attio) and the draft has Elena \"mentioning\" Karim which is a slight liberty; Max Freeman's why_now cites \"corroborated by a second Ramp promotion\" as evidence of a \"broader leadership reset,\" which is a reasonable inference but borders on stretching a coincidental same-day promotion into a manufactured trend. Otherwise dates, titles, and evidence are grounded in the input with no invented facts."
+    }
+  ]
+}
