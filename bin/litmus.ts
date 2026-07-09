@@ -18,7 +18,7 @@ if (existsSync(".env")) {
 }
 
 // ---- ANSI (zero-dep) ----
-const on = process.stdout.isTTY !== false;
+const on = !!process.stdout.isTTY; // colors + spinner only in a real terminal (clean when piped/redirected)
 const e = (n: string) => (on ? n : "");
 const C = {
   reset: e("\x1b[0m"), b: e("\x1b[1m"), dim: e("\x1b[2m"),
@@ -37,6 +37,16 @@ const verdict = (p: any) => {
 function banner() {
   console.log(`\n${C.mag}${C.b}▓▓ LITMUS${C.reset}  ${C.dim}the scoring layer for intent${C.reset}\n`);
 }
+
+// live spinner for the slow scoring calls
+function spinner(text: string) {
+  if (!on) { process.stdout.write(`${text}\n`); return () => {}; }
+  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  let i = 0;
+  const id = setInterval(() => process.stdout.write(`\r${C.cyan}${frames[i++ % frames.length]}${C.reset} ${C.dim}${text}${C.reset}`), 80);
+  return () => { clearInterval(id); process.stdout.write("\r" + " ".repeat(text.length + 6) + "\r"); };
+}
+const rule = () => console.log(`${C.gray}${"─".repeat(56)}${C.reset}`);
 
 function loadContext(): ClientContext {
   const p = join(process.cwd(), "client-context.json");
@@ -69,7 +79,7 @@ async function cmdBrief() {
   const top = parseInt(arg("top", "5")!, 10);
   const ctx = loadContext();
   banner();
-  process.stdout.write(`${C.dim}scoring the ${source} firehose…${C.reset}\r`);
+  const stop = spinner(`scoring the ${source} firehose — verifying, ranking…`);
 
   const { runSillageAgent } = await import("../lib/agent-loop");
   const { runIcpWorkflow, runFromSillage, runFromHubspot } = await import("../lib/pipeline");
@@ -78,26 +88,29 @@ async function cmdBrief() {
     : source === "sillage" ? runFromSillage(ctx, top)
     : source === "hubspot" ? runFromHubspot(ctx, top)
     : runIcpWorkflow(ctx, top, ["Stripe", "Ramp", "Notion", "Vercel", "Brex"]));
+  stop();
 
   if (has("json")) { console.log(JSON.stringify(prospects, null, 2)); return; }
 
-  process.stdout.write(" ".repeat(50) + "\r");
-  console.log(`${C.b}today's brief${C.reset} ${C.dim}· ${source} · ${prospects.length} to work${C.reset}\n`);
+  console.log(`${C.b}today's brief${C.reset}  ${C.dim}${source} · ${prospects.length} to work${C.reset}`);
+  rule();
   prospects.forEach(printProspect);
   const hot = prospects.filter((p) => p.score >= 70).length;
   const noise = prospects.filter((p) => (p.factors?.find((f: any) => f.key === "real")?.value ?? 0) < 0.3).length;
-  console.log(`${C.gray}────────${C.reset}  ${C.green}${hot} hot${C.reset}  ${C.yellow}${prospects.length - hot - noise} watch${C.reset}  ${C.red}${noise} noise killed${C.reset}\n`);
+  rule();
+  console.log(`  ${C.green}${C.b}${hot}${C.reset} hot   ${C.yellow}${C.b}${prospects.length - hot - noise}${C.reset} watch   ${C.red}${C.b}${noise}${C.reset} noise killed   ${C.dim}·  approve in the dashboard or 'litmus score' one${C.reset}\n`);
 }
 
 async function cmdScore() {
   const name = process.argv[3];
   if (!name || name.startsWith("--")) { console.log(`usage: litmus score "Jane Doe" --company acme.com --title "VP Sales"`); return; }
   banner();
-  process.stdout.write(`${C.dim}scoring ${name}…${C.reset}\r`);
+  const stop = spinner(`scoring ${name}…`);
   const { runFromContacts } = await import("../lib/pipeline");
   const scored = await runFromContacts(loadContext(), [{ full_name: name, company: arg("company"), title: arg("title") }], 1);
-  process.stdout.write(" ".repeat(40) + "\r");
-  if (!scored.length) { console.log(`${C.red}no result${C.reset}`); return; }
+  stop();
+  if (!scored.length) { console.log(`  ${C.red}no result${C.reset}\n`); return; }
+  rule();
   printProspect(scored[0], 0);
 }
 
