@@ -11,3 +11,4 @@ dist/
 .DS_Store
 next-env.d.ts
 # cache/ is committed on purpose once pre-warmed
+.vercel

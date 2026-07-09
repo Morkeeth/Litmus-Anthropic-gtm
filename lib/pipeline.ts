@@ -3,7 +3,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import type { Signal, EnrichedContact, ScoredSignal, ClientContext } from "../src/types";
-import { peopleSearch, enrichContacts } from "../src/fullenrich";
+import { peopleSearch, enrichContacts, reverseEmail } from "../src/fullenrich";
 import { normalizeFullEnrichProfile, mergeFullEnrichContactInfo } from "../src/normalize";
 import { scoreAndRank, type ScoreInput } from "../src/score";
 
@@ -113,4 +113,52 @@ export async function runIcpWorkflow(ctx: ClientContext, topN = 7): Promise<Scor
   }
 
   return ranked;
+}
+
+// ---------- Source-optional flows (Litmus works without FullEnrich search / without Sillage) ----------
+
+// Flow C: CRM / CSV contacts you already have. No FullEnrich search, no Sillage. Pure ICP scoring.
+export async function runFromContacts(
+  ctx: ClientContext,
+  contacts: Array<{ full_name: string; title?: string; company?: string; domain?: string; email?: string }>,
+  topN = 7,
+): Promise<ScoredSignal[]> {
+  const inputs: ScoreInput[] = contacts.map((c, i) => ({
+    signal: {
+      signal_id: `crm_${i}`,
+      agent: "account_based_signals",
+      type: "crm_contact",
+      category: "first_party",
+      account: { name: c.company ?? "", domain: c.domain, icp_match: true },
+      contact: { full_name: c.full_name, role: c.title },
+      summary: `CRM contact: ${c.title ?? "role"} at ${c.company ?? "company"}`,
+      detected_at: new Date().toISOString(),
+    } as Signal,
+    enriched: {
+      full_name: c.full_name,
+      title: c.title,
+      is_current_role: true,
+      company: { name: c.company, domain: c.domain },
+      work_email: c.email ? { email: c.email, status: "UNVERIFIED" } : undefined,
+    } as EnrichedContact,
+  }));
+  return scoreAndRank(inputs, { clientContext: ctx, topN });
+}
+
+// Flow D: a list of emails (webinar, export). FullEnrich reverse-lookup -> full profile -> score.
+// Showcases FullEnrich's reverse-email feature. Needs a FullEnrich key.
+export async function runFromEmails(ctx: ClientContext, emails: string[], topN = 7): Promise<ScoredSignal[]> {
+  const inputs: ScoreInput[] = [];
+  for (const email of emails) {
+    try {
+      const res = await reverseEmail(email);
+      const profile = res?.data?.[0]?.profile;
+      if (!profile) continue;
+      const enriched = normalizeFullEnrichProfile({ people: [profile] });
+      inputs.push({ signal: profileToSignal(profile), enriched });
+    } catch {
+      // skip unresolvable emails
+    }
+  }
+  return scoreAndRank(inputs, { clientContext: ctx, topN });
 }
