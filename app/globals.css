@@ -160,6 +160,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--fg); box-shadow
 .eval-q { font-size: 14px; margin-bottom: 8px; } .eval-q b { font-weight: 600; }
 .eval-btns { display: flex; gap: 8px; margin-bottom: 8px; }
 .eval-btns button { font-size: 13px; padding: 6px 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chip-btn { font-family: var(--font-mono); font-size: 11px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg); color: var(--muted); cursor: pointer; transition: all 0.12s; }
+.chip-btn:hover { border-color: var(--fg); color: var(--fg); }
+.chip-btn.on { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
 
 footer { padding: 36px 0 60px; font-family: var(--font-mono); font-size: 11px; color: var(--faint); }
 

@@ -43,6 +43,10 @@ const FUNNEL = [
   { n: 5, lbl: "worth your morning" },
 ];
 
+// Structured reason chips — research: categorical labels beat free-text AND thumbs-only for learning signal.
+const LEAD_REASONS = ["wrong persona", "not in-market", "already a customer", "bad timing", "great fit", "perfect timing"];
+const MSG_REASONS = ["too generic", "wrong tone", "too long", "off-topic", "nailed it", "great hook"];
+
 export default function Dashboard() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [state, setState] = useState<Record<string, "sent" | "killed">>({});
@@ -257,7 +261,12 @@ export default function Dashboard() {
                 <button className={evalLead.verdict === "up" ? "primary" : "ghost"} onClick={() => setEvalLead({ ...evalLead, verdict: "up" })}>👍 yes</button>
                 <button className={evalLead.verdict === "down" ? "primary" : "ghost"} onClick={() => setEvalLead({ ...evalLead, verdict: "down" })}>👎 no</button>
               </div>
-              <input placeholder="why? (wrong persona · not in-market · already a customer…)" value={evalLead.reason} onChange={(e) => setEvalLead({ ...evalLead, reason: e.target.value })} />
+              <div className="chips">
+                {LEAD_REASONS.map((r) => (
+                  <button key={r} className={`chip-btn ${evalLead.reason === r ? "on" : ""}`} onClick={() => setEvalLead({ ...evalLead, reason: r })}>{r}</button>
+                ))}
+              </div>
+              <input placeholder="or type your own reason…" value={evalLead.reason} onChange={(e) => setEvalLead({ ...evalLead, reason: e.target.value })} />
             </div>
 
             <div className="eval-row">
@@ -266,7 +275,12 @@ export default function Dashboard() {
                 <button className={evalMsg.verdict === "up" ? "primary" : "ghost"} onClick={() => setEvalMsg({ ...evalMsg, verdict: "up" })}>👍 yes</button>
                 <button className={evalMsg.verdict === "down" ? "primary" : "ghost"} onClick={() => setEvalMsg({ ...evalMsg, verdict: "down" })}>👎 no</button>
               </div>
-              <input placeholder="why? (too generic · wrong tone · nailed it…)" value={evalMsg.reason} onChange={(e) => setEvalMsg({ ...evalMsg, reason: e.target.value })} />
+              <div className="chips">
+                {MSG_REASONS.map((r) => (
+                  <button key={r} className={`chip-btn ${evalMsg.reason === r ? "on" : ""}`} onClick={() => setEvalMsg({ ...evalMsg, reason: r })}>{r}</button>
+                ))}
+              </div>
+              <input placeholder="or type your own reason…" value={evalMsg.reason} onChange={(e) => setEvalMsg({ ...evalMsg, reason: e.target.value })} />
             </div>
 
             <div className="row" style={{ marginTop: 18 }}>
