@@ -71,18 +71,24 @@ export const hubspotSink: Sink = {
     if (process.env.HUBSPOT_WRITE_ARMED !== "1") {
       throw new Error("HubSpot write not armed — set HUBSPOT_WRITE_ARMED=1 to write to the CRM");
     }
+    // Try custom litmus_* properties (needs crm.schemas scope); fall back to the standard `message`
+    // field so it works with just contacts.write. Either way the intel lands on the record.
     const { ensureLitmusProperties, searchContactByEmail, patchContact } = await import("./hubspot");
-    await ensureLitmusProperties();
+    let customOk = true;
+    try { await ensureLitmusProperties(); } catch { customOk = false; }
     for (const s of items) {
       const email = s.enriched?.work_email?.email;
       if (!email) continue;
       const c = await searchContactByEmail(email);
       if (!c) continue;
-      await patchContact(c.id, {
-        litmus_score: String(s.score),
-        litmus_reason: s.rank_reason,
-        litmus_why_now: s.why_now ? `${s.why_now.trigger} — ${s.why_now.why_buying}` : "",
-      });
+      const summary = `🧪 Litmus ${s.score}/100 — ${s.rank_reason}${s.why_now ? ` · Why now: ${s.why_now.why_buying}` : ""}`;
+      const props: Record<string, string> = { message: summary };
+      if (customOk) {
+        props.litmus_score = String(s.score);
+        props.litmus_reason = s.rank_reason;
+        props.litmus_why_now = s.why_now ? `${s.why_now.trigger} — ${s.why_now.why_buying}` : "";
+      }
+      await patchContact(c.id, props);
     }
   },
 };

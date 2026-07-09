@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runIcpWorkflow, runFromContacts, runFromEmails, runFromSillage, runFromHubspot } from "../../../lib/pipeline";
 import { runSillageAgent } from "../../../lib/agent-loop";
 import { slackSink, hubspotSink } from "../../../src/sinks";
+import { writeBriefCache } from "../../../lib/cache";
 import type { ClientContext } from "../../../src/types";
 
 // LIVE workflow. Source + destination are config-driven:
@@ -48,6 +49,8 @@ export async function POST(req: Request) {
       if (!process.env.FULLENRICH_API_KEY) return NextResponse.json({ error: "ICP search needs FULLENRICH_API_KEY (or pass contacts[])" }, { status: 400 });
       prospects = await runIcpWorkflow(clientContext, topN, targetCompanies);
     }
+
+    writeBriefCache(prospects, { source: source ?? "fullenrich" }); // pre-warm: dashboard reads this instantly
 
     // Deliver to the chosen destination (dashboard is the default — the response IS the delivery).
     let delivered = "dashboard";

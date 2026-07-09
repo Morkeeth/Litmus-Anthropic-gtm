@@ -13,3 +13,4 @@ dist/
 next-env.d.ts
 # cache/ is committed on purpose once pre-warmed
 .vercel
+data/cache-brief.json
