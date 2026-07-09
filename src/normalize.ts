@@ -78,7 +78,7 @@ export function normalizeSillageDetection(det: any, lead?: any): Signal {
       previous_company: det?.data?.previous_position?.company_name,
     },
     summary: sillageSummary(det, company),
-    // urgency scores off the TRIGGER date, not when Sillage crawled it
+    // prefer the TRIGGER date over the crawl date — drives dedup/display and the signal-strength read
     detected_at: det.signal_date ?? det.detected_at ?? new Date().toISOString(),
     raw: det,
   };

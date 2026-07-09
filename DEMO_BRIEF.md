@@ -6,17 +6,16 @@ Everyone else builds signal sources. **Litmus is the scoring layer between the s
 
 ## 2. Technical facts to know cold
 
-**The score.** `score(signal) → 0–100` from four factors, each 0–1 and each citing its evidence:
+**The score.** `score(signal) → 0–100` from three factors, each 0–1 and each citing its evidence:
 - `real` (gate) — is the person verifiably in that role NOW? The false-positive kill.
 - `icp_fit` (gate) — matches this seller's ICP?
-- `urgent` (boost) — is now the moment? Dominant boost.
-- `warm` (boost) — do we have a way in?
+- `warm` (boost) — the composite way-in *and* signal strength: `0.55·relationship_edge + 0.30·signal_strength + 0.15·corroboration`. A champion move or competitor activity raises it, not just a relationship; independent signals stacking raise it further.
 
-Formula: `base = 100 × real × icp_fit`, then `score = base × (0.4 + 0.35·urgent + 0.25·warm)`. Gates are multiplicative, so a dead or out-of-ICP lead scores ~0 no matter how urgent. **The model never outputs the score** — it emits factors via forced structured output (tool_choice), and the composite is recomputed in code. Auditable math, not vibes.
+Formula: `base = 100 × real × icp_fit`, then `score = base × (0.4 + 0.6·warm)`. Gates are multiplicative, so a dead or out-of-ICP lead scores ~0 no matter how strong the signal. We deliberately dropped a standalone `urgent`/recency factor — Sillage surfaces signals within a day, so freshness is a constant that can't rank; what discriminates is signal strength and whether we have a way in, which `warm` now captures. Because `warm` is a continuous blend, scores fan across the whole 0–100 band. **The model never outputs the score** — it emits factors via forced structured output (tool_choice), and the composite is recomputed in code. Auditable math, not vibes.
 
 **LITMUS.md is the product.** The whole scoring + drafting brain is one versioned, templated system prompt loaded by `src/score.ts`. Everything else is pipes.
 
-**The agent loop** (`lib/agent-loop.ts`, Flow B). Not a fixed pipeline — a model-driven tool-use loop: a batch of Sillage detections comes in, the model triages on fit/urgency first, then spends FullEnrich credits **only on candidates that could plausibly rank** (capped verify budget), then emits one strict `emit_ranked` call for the whole batch. Cost-aware agency, not enrich-everything.
+**The agent loop** (`lib/agent-loop.ts`, Flow B). Not a fixed pipeline — a model-driven tool-use loop: a batch of Sillage detections comes in, the model triages on fit and signal strength first, then spends FullEnrich credits **only on candidates that could plausibly rank** (capped verify budget), then emits one strict `emit_ranked` call for the whole batch. Cost-aware agency, not enrich-everything.
 
 **The independence rule.** `real` is verified with FullEnrich, never with Sillage data — verifying a Sillage signal with Sillage is circular. FullEnrich is the independent witness. One nuance: Sillage is fresher on job changes, so a lagging FullEnrich title isn't a contradiction; `is_current_role: false` (person left) is the hard kill.
 
@@ -42,7 +41,7 @@ Formula: `base = 100 × real × icp_fit`, then `score = base × (0.4 + 0.35·urg
 
 ## 5. Next steps (say these, they show judgment)
 
-1. **Per-seller weight tuning** — the 0.4/0.35/0.25 weights are already parameterized; learn them from the 👍/👎 feedback instead of hand-setting.
+1. **Per-seller weight tuning** — the 0.4/0.6 gate/boost split and the warm sub-weights (0.55/0.30/0.15) are already parameterized; learn them from the 👍/👎 feedback instead of hand-setting.
 2. **Graduated autonomy** — above a score threshold, auto-send with the approval gate becoming a review-after; below it, draft-only. Trust is earned per seller.
 3. **Real relationship graph** — replace the heuristic warm-path lookup with actual LinkedIn/email graph via Unipile.
 4. **More sources/sinks** — the scorer is the constant; Salesforce, Attio, webhooks are just adapters.
@@ -63,7 +62,7 @@ One scan = 1 filter-derivation call + FullEnrich search (10 profiles) + 10 score
 ## 7. Hard questions — suggested answers
 
 - **"Why can't I do this in Clay?"** Clay gives you a spreadsheet of enrichments; you still decide. Litmus is opinionated: a ranked cut with an auditable score, a defensible why-now, drafts, and a feedback loop that learns your taste.
-- **"How do you stop the LLM making up scores?"** It can't emit one. It emits four cited factors through a forced JSON schema; the composite is computed in code. Prompt forbids uncited facts; unverifiable → `real: 0`, "false negative is cheaper than a burned touch."
+- **"How do you stop the LLM making up scores?"** It can't emit one. It emits three cited factors through a forced JSON schema; the composite is computed in code. Prompt forbids uncited facts; unverifiable → `real: 0`, "false negative is cheaper than a burned touch."
 - **"What's real vs mocked in the demo?"** The pipeline runs live end-to-end with keys ("run live ↻" hits `/api/run`). The video/dashboard fallback uses committed cache of real API responses — hackathon-wifi insurance, not fake data.
 - **"Unit economics?"** A full scan is ~$0.70–3.50 all-in (see §6): Sonnet 5 scoring is ~3¢/lead; the expensive resource is FullEnrich phone credits (~$0.55 each), which is exactly why the agent triages before verifying.
 - **"What's the moat?"** LITMUS.md + the eval harness + accumulated per-seller feedback data. Signal sources commoditize; the scoring layer that knows *your* taste doesn't.

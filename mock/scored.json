@@ -1,7 +1,7 @@
 [
   {
     "signal_id": "sig_champion_01",
-    "score": 92,
+    "score": 89,
     "rank_reason": "The VP Eng who championed you at Notion just landed at Ramp six weeks ago \u2014 squarely in-ICP, and warm through Marie.",
     "why_now": {
       "trigger": "Started as VP Engineering at Ramp 6 weeks ago",
@@ -20,14 +20,9 @@
         "detail": "fintech, 500-1000, VP Eng persona \u2014 matches ICP"
       },
       {
-        "key": "urgent",
-        "value": 1.0,
-        "detail": "job change 6 weeks ago \u2014 inside the 30-90d window"
-      },
-      {
         "key": "warm",
-        "value": 0.9,
-        "detail": "past champion, drove the Notion deal; edge held by Marie, as_of 2026-05"
+        "value": 0.81,
+        "detail": "composite 0.81 = 0.55*edge(1.0 past champion via Marie) + 0.30*signal(0.85 champion into buying seat) + 0.15*corrob(0.0 lone signal)"
       }
     ],
     "enriched": {
@@ -90,7 +85,7 @@
   },
   {
     "signal_id": "sig_funding_01",
-    "score": 81,
+    "score": 55,
     "rank_reason": "Series B closed Tuesday and they just opened four GTM roles \u2014 buying window is open now, but you have no path in.",
     "why_now": {
       "trigger": "Series B closed 2 days ago + 4 GTM roles opened in 60 days",
@@ -109,14 +104,9 @@
         "detail": "B2B SaaS, post-Series-B, RevOps persona \u2014 strong fit"
       },
       {
-        "key": "urgent",
-        "value": 1.0,
-        "detail": "funding round 2 days ago + 4 GTM reqs in 60d"
-      },
-      {
         "key": "warm",
-        "value": 0.0,
-        "detail": "no relationship edge \u2014 cold"
+        "value": 0.35,
+        "detail": "composite 0.35 = 0.55*edge(0.0 cold) + 0.30*signal(0.9 Series B) + 0.15*corrob(0.5 funding+hiring stack)"
       }
     ],
     "enriched": {
@@ -169,7 +159,7 @@
   },
   {
     "signal_id": "sig_intent_01",
-    "score": 68,
+    "score": 40,
     "rank_reason": "Their whole team has been reading category content for two weeks \u2014 real interest, real buyer, but only one signal so far.",
     "why_now": {
       "trigger": "Multiple team members engaged category content across two weeks",
@@ -188,14 +178,9 @@
         "detail": "mid-market SaaS, SalesOps persona \u2014 good fit"
       },
       {
-        "key": "urgent",
-        "value": 0.5,
-        "detail": "content engagement ongoing 2 weeks, no hard trigger"
-      },
-      {
         "key": "warm",
-        "value": 0.0,
-        "detail": "cold"
+        "value": 0.11,
+        "detail": "composite 0.11 = 0.55*edge(0.0 cold) + 0.30*signal(0.35 sustained content engagement) + 0.15*corrob(0.0 single signal)"
       }
     ],
     "enriched": {
@@ -223,7 +208,7 @@
   },
   {
     "signal_id": "sig_hiring_01",
-    "score": 54,
+    "score": 34,
     "rank_reason": "Hiring a first RevOps lead \u2014 early signal, real company, but the buyer for you may not be in the seat yet.",
     "factors": [
       {
@@ -237,14 +222,9 @@
         "detail": "matches ICP firmographics"
       },
       {
-        "key": "urgent",
-        "value": 0.5,
-        "detail": "strategic first hire, 45d old"
-      },
-      {
         "key": "warm",
-        "value": 0.0,
-        "detail": "cold"
+        "value": 0.21,
+        "detail": "composite 0.21 = 0.55*edge(0.0 cold) + 0.30*signal(0.7 first RevOps hire) + 0.15*corrob(0.0 lone signal)"
       }
     ],
     "enriched": {
@@ -272,7 +252,7 @@
   },
   {
     "signal_id": "sig_noise_01",
-    "score": 8,
+    "score": 0,
     "rank_reason": "This 'hot' account's named contact left four months ago \u2014 the signal is chasing a ghost. Killed, with proof.",
     "factors": [
       {
@@ -286,14 +266,9 @@
         "detail": "account fits, but the person does not work there"
       },
       {
-        "key": "urgent",
-        "value": 0.2,
-        "detail": "intent surge, but attributed to a departed contact"
-      },
-      {
         "key": "warm",
-        "value": 0.0,
-        "detail": "cold"
+        "value": 0.06,
+        "detail": "composite 0.06 = 0.55*edge(0.0 cold) + 0.30*signal(0.2 surge on a departed contact) + 0.15*corrob(0.0)"
       }
     ],
     "enriched": {
@@ -325,7 +300,7 @@
   },
   {
     "signal_id": "sig_outicp_01",
-    "score": 5,
+    "score": 2,
     "rank_reason": "Real, current, and active \u2014 but a 12-person agency, well outside your enterprise ICP. Not worth a touch.",
     "factors": [
       {
@@ -339,14 +314,9 @@
         "detail": "12 employees \u2014 fails the ICP size floor"
       },
       {
-        "key": "urgent",
-        "value": 0.6,
-        "detail": "recent keyword mention"
-      },
-      {
         "key": "warm",
-        "value": 0.0,
-        "detail": "cold"
+        "value": 0.15,
+        "detail": "composite 0.15 = 0.55*edge(0.0 cold) + 0.30*signal(0.5 keyword mention) + 0.15*corrob(0.0)"
       }
     ],
     "enriched": {

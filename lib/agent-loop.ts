@@ -53,11 +53,11 @@ You receive a BATCH of ${batchSize} prospects as a JSON array in the user messag
 \`signal_id\`, \`signal\` (the intent event), \`sillage_lead_context\` (Sillage's own lead data — background ONLY, it can NEVER support the \`real\` factor: verifying a Sillage signal with Sillage data is circular), and \`warm_path\`.
 
 Tools:
-- **verify_person** — live FullEnrich lookup. Confirms the PERSON is real: found in FullEnrich at the claimed account. \`real\` > 0.5 requires a verify_person result. It costs credits: triage on icp_fit/urgent from the batch first, then verify only the candidates that could plausibly rank in the top ${topN} (at most ${Math.max(topN * 2, 4)} calls). Skip prospects that are obvious icp_fit zeros. Also skip thin engagement signals (a click, a like, an open) with no corroborating trigger — verification can confirm a person exists, but it cannot turn a non-trigger into a reason to call, so a thin signal deserves no credit. Same for a sibling signal you are folding into a carrier via defers_to — it will not rank, so do not verify it.
+- **verify_person** — live FullEnrich lookup. Confirms the PERSON is real: found in FullEnrich at the claimed account. \`real\` > 0.5 requires a verify_person result. It costs credits: triage on icp_fit and signal strength from the batch first, then verify only the candidates that could plausibly rank in the top ${topN} (at most ${Math.max(topN * 2, 4)} calls). Skip prospects that are obvious icp_fit zeros. Also skip thin engagement signals (a click, a like, an open) with no corroborating trigger — verification can confirm a person exists, but it cannot turn a non-trigger into a reason to call, so a thin signal deserves no credit. Same for a sibling signal you are folding into a carrier via defers_to — it will not rank, so do not verify it.
 
 Data precedence (HARD RULE): Sillage is fresher than FullEnrich for recent job changes — FullEnrich's index lags. If verify_person finds the person at the claimed account but shows an OLDER title/role than the Sillage signal claims, that is expected lag, NOT a contradiction: Sillage takes precedence on the fresh change, and \`real\` may still be 1.0 (cite both sources in evidence). Kill \`real\` only when the person is not found, has left the account, or the account itself is unverifiable.
 Left ≠ lag: index lag always looks like \`is_current_role: true\` at the claimed account with an older title. \`is_current_role: false\` on the verify result means the person LEFT that account — that is the false-positive kill, \`real\` = 0 exactly, never 0.5, no "pending confirmation" hedge. A burned touch on a departed prospect is the one failure this product exists to prevent.
-- **emit_ranked** — call EXACTLY ONCE, when triage and verification are done, with an assessment for EVERY prospect in the batch. Unverified prospects: \`real\` capped at 0.5 with an "inconclusive" evidence item. Full drafts are required only for your top ${topN}; lower-ranked prospects may have an empty drafts array. The cut is by composite score, so any prospect you did NOT kill (real > 0 and icp_fit > 0) and did not defer can land in the top ${topN} when the batch is thin — give every such survivor drafts, and let a weak trigger show in the framing ("no urgent trigger yet, so this is a light touch") rather than in a missing draft.
+- **emit_ranked** — call EXACTLY ONCE, when triage and verification are done, with an assessment for EVERY prospect in the batch. Unverified prospects: \`real\` capped at 0.5 with an "inconclusive" evidence item. Full drafts are required only for your top ${topN}; lower-ranked prospects may have an empty drafts array. The cut is by composite score, so any prospect you did NOT kill (real > 0 and icp_fit > 0) and did not defer can land in the top ${topN} when the batch is thin — give every such survivor drafts, and let a weak signal show in the framing ("no strong trigger yet, so this is a light touch") rather than in a missing draft.
 
 Batch judgment (you are RANKING a batch, not scoring rows in isolation):
 - Signals sharing an account are ONE account story. Cross-reference them: pick the single strongest entry to carry the account, set \`defers_to\` = the carrier's signal_id on each sibling, and make the sibling's rank_reason point at it ("second signal on Northwind — Miles Fenwick's SVP entry carries this account"). Deferring entries need no drafts and are ranked below every non-deferring prospect; corroborating sibling signals should strengthen the carrier's why_now instead.
@@ -124,7 +124,7 @@ const EMIT_TOOL: Anthropic.Tool = {
               items: {
                 type: "object",
                 properties: {
-                  key: { type: "string", enum: ["real", "icp_fit", "urgent", "warm"] },
+                  key: { type: "string", enum: ["real", "icp_fit", "warm"] },
                   value: { type: "number" },
                   detail: { type: "string" },
                 },
@@ -165,10 +165,11 @@ const EMIT_TOOL: Anthropic.Tool = {
   },
 };
 
-// LITMUS.md formula (authoritative): base = 100*real*icp_fit ; score = base*(0.4 + 0.35*urgent + 0.25*warm)
+// LITMUS.md formula (authoritative): base = 100*real*icp_fit ; score = base*(0.4 + 0.6*warm)
+// warm is a composite (relationship edge + signal strength + corroboration) scored by the model.
 export function composite(factors: ScoreFactor[]): number {
   const f = (k: string) => factors.find((x) => x.key === k)?.value ?? 0;
-  return Math.round(100 * f("real") * f("icp_fit") * (0.4 + 0.35 * f("urgent") + 0.25 * f("warm")));
+  return Math.round(100 * f("real") * f("icp_fit") * (0.4 + 0.6 * f("warm")));
 }
 
 // ---------- the loop ----------

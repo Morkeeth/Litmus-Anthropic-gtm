@@ -64,7 +64,7 @@ const EMIT_TOOL: Anthropic.Tool = {
         items: {
           type: "object",
           properties: {
-            key: { type: "string", enum: ["real", "icp_fit", "urgent", "warm"] },
+            key: { type: "string", enum: ["real", "icp_fit", "warm"] },
             value: { type: "number" },
             detail: { type: "string" },
           },
@@ -101,11 +101,12 @@ const EMIT_TOOL: Anthropic.Tool = {
   },
 };
 
-// LITMUS.md formula (authoritative): base = 100*real*icp_fit ; score = base*(0.4 + 0.35*urgent + 0.25*warm)
+// LITMUS.md formula (authoritative): base = 100*real*icp_fit ; score = base*(0.4 + 0.6*warm)
+// warm is a composite (relationship edge + signal strength + corroboration) scored by the model.
 function composite(factors: ScoreFactor[]): number {
   const f = (k: string) => factors.find((x) => x.key === k)?.value ?? 0;
   const base = 100 * f("real") * f("icp_fit");
-  return Math.round(base * (0.4 + 0.35 * f("urgent") + 0.25 * f("warm")));
+  return Math.round(base * (0.4 + 0.6 * f("warm")));
 }
 
 export async function scoreSignal(input: ScoreInput, cfg: ScoreConfig): Promise<ScoredSignal> {

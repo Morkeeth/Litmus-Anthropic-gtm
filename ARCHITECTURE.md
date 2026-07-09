@@ -18,7 +18,7 @@ CRM (HubSpot/Salesforce) ──┐  provides the account list to watch (prod; wo
    FULLENRICH ───────────────▶ reachability: verified work email + mobile (async waterfall)
                            │
                            ▼
-   LITMUS SCORE (Anthropic) ─▶ score 0-100 = f(real, warm, urgent, icp_fit) + ranked + cited reason   ◀── THE IP
+   LITMUS SCORE (Anthropic) ─▶ score 0-100 = f(real, icp_fit, warm) + ranked + cited reason   ◀── THE IP
                            │
                            ▼
    ACTION (Unipile) ─────────▶ drafted email + LinkedIn message, sent on behalf of the rep
@@ -37,13 +37,12 @@ One function is the whole product:
 score(signal) -> { score, rank_reason, factors, enriched, drafts, warm_path?, evidence[] }
 ```
 
-- **Composite score 0-100** from four factors, each cited, none a black box:
+- **Composite score 0-100** from three factors, each cited, none a black box:
   - `real` — is the person actually in that role now? (FullEnrich lookup — the anti-false-positive check, the old Litmus verify)
-  - `warm` — do we have a path in? (seeded relationship DB — drives warm-intro vs cold)
-  - `urgent` — how fresh / time-boxed is the signal? (job change inside 30-90d window scores high)
   - `icp_fit` — does the account/persona match? (Sillage persona + firmographics)
+  - `warm` — composite way-in + signal strength: `0.55*relationship_edge + 0.30*signal_strength + 0.15*corroboration` (seeded relationship DB + how strong a signal Sillage surfaced + how many independent signals stack). We dropped a standalone `urgent`/recency factor: Sillage surfaces signals within a day, so freshness is constant and can't discriminate.
 - **Anthropic does the reasoning**, not just a weighted sum: the model reads the aggregated account intel (all of the account's Sillage signals, job posts, content engagement) and writes the `rank_reason` — the one sentence a rep reads to decide. Forced structured output; the UI renders from JSON.
-- **The prompt is the product: `LITMUS.md`.** It is the system prompt `score.ts` loads. Templated slots: `{{CLIENT_CONTEXT}}`, `{{SIGNAL}}`, `{{ENRICHED_CONTACT}}`, `{{WARM_PATH}}`, `{{FEEDBACK_EXAMPLES}}`. Treat edits to it as changes to core IP. Composite: `real` and `icp_fit` are gates, `urgent`/`warm` are boosts (a dead or out-of-ICP prospect scores ~0 by design).
+- **The prompt is the product: `LITMUS.md`.** It is the system prompt `score.ts` loads. Templated slots: `{{CLIENT_CONTEXT}}`, `{{SIGNAL}}`, `{{ENRICHED_CONTACT}}`, `{{WARM_PATH}}`, `{{FEEDBACK_EXAMPLES}}`. Treat edits to it as changes to core IP. Composite: `real` and `icp_fit` are gates, `warm` is the boost (a dead or out-of-ICP prospect scores ~0 by design).
 - **Ranked worklist out, filtered to top 5-10** — never dump all scored data (that recreates the firehose the rep is drowning in). The cut is the value.
 
 ### CLIENT CONTEXT — set up once (onboarding)

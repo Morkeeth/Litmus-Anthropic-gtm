@@ -91,7 +91,7 @@ export async function runIcpWorkflow(ctx: ClientContext, topN = 7, targetCompani
   if (targetCompanies?.length) filters.current_company_names = targetCompanies.map((v) => ({ value: v }));
   const { people } = await peopleSearch({ ...filters, limit: Math.max(topN * 2, 10) });
 
-  // 2. Score every candidate (profile is enough for real/icp_fit/urgent).
+  // 2. Score every candidate (profile is enough for real/icp_fit/warm).
   const inputs: ScoreInput[] = people.map((p: any) => ({
     signal: profileToSignal(p),
     enriched: normalizeFullEnrichProfile({ people: [p] }),

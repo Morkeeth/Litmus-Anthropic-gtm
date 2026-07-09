@@ -49,7 +49,7 @@ export interface EnrichedContact {
 // ---------- Scoring output (the product) ----------
 
 export interface ScoreFactor {
-  key: "real" | "warm" | "urgent" | "icp_fit";
+  key: "real" | "warm" | "icp_fit";
   value: number; // 0..1 contribution
   detail: string; // the exact field / edge that drove it (for the evidence chain)
 }
