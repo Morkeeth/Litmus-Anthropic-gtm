@@ -126,6 +126,11 @@ input:focus, textarea:focus { outline: none; border-color: var(--fg); box-shadow
 .conn:last-child { border: none; }
 .dot { color: var(--faint); } .dot.ok { color: var(--hot); }
 
+/* Onboarding layers */
+.layer { margin: 24px 0; padding-top: 4px; }
+.layer-h { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+.layer-note { font-weight: 400; color: var(--muted); margin-left: 8px; }
+
 /* Onboarding stepper + source cards */
 .stepper { display: flex; gap: 8px; padding: 20px 0 8px; font-family: var(--font-mono); font-size: 12px; flex-wrap: wrap; }
 .stepper .step { color: var(--faint); cursor: pointer; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; }

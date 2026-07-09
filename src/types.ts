@@ -77,13 +77,18 @@ export interface Draft {
 
 // Set up ONCE in onboarding. Grounds icp_fit scoring + the drafts. Injected into LITMUS.md.
 export interface ClientContext {
-  what_we_sell: string;
+  // WHO — pullable from Sillage persona / FullEnrich (firmographics the tools already know)
   icp: string; // company + personas + disqualifiers
+  // WHAT — seller-only: feeds icp_fit reasoning + draft substance
+  what_we_sell: string;
   competitors?: string;
   proof_assets?: string; // case studies, integrations, logos
+  // HOW — seller-only: feeds the drafts
   tone_of_voice: string;
   outreach_approach?: string;
   example_that_worked?: string;
+  // WHY-GOOD — the judgment no data tool has: what makes a prospect hot for THIS seller
+  why_good?: string; // 2-3 rules, e.g. "recent VP Sales change", "using a competitor", "hiring SDRs fast"
 }
 
 // Feedback event — feeds the learning loop. Recent ones become few-shot in LITMUS.md.

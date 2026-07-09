@@ -48,10 +48,12 @@ Score each factor and state the exact field/evidence that drove it. Do not guess
 
 ```
 base   = 100 * real * icp_fit
-score  = round( base * (0.6 + 0.25*urgent + 0.15*warm) )
+score  = round( base * (0.4 + 0.35*urgent + 0.25*warm) )
 ```
 
-So a dead signal (`real=0`) or an out-of-ICP prospect (`icp_fit=0`) scores ~0 no matter how urgent — that is intentional. A real, in-ICP prospect starts at 60 and climbs with freshness and warmth. Default weights; the seller can retune.
+So a dead signal (`real=0`) or an out-of-ICP prospect (`icp_fit=0`) scores ~0 no matter what — intentional. A real, in-ICP prospect with NO trigger and no path floors at 40 (don't call yet); a fresh trigger pushes it toward 75; trigger + warm path → ~100. **Urgency (the why-now) is the dominant boost — a lead with no real trigger should not read as "work today."** Default weights; the seller can retune.
+
+When scoring `icp_fit` and `urgent`, apply the seller's **WHY-GOOD rules** from CLIENT_CONTEXT: a prospect matching a stated "what makes them hot for us" rule (e.g. recent VP Sales change, using a competitor, hiring SDRs) should score those factors higher and is exactly what `why_now` must name.
 
 ### The one-sentence reason (`rank_reason`)
 

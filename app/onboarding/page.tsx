@@ -3,12 +3,22 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const CTX_FIELDS = [
-  { key: "what_we_sell", label: "What you sell", hint: "The product, the value, the problem it kills.", area: true },
-  { key: "icp", label: "Who you sell to (ICP)", hint: "Company profile, personas you win with, and who is NOT a fit.", area: true },
-  { key: "competitors", label: "Competitors", hint: "Who you displace or lose to.", area: false },
-  { key: "tone_of_voice", label: "Tone of voice", hint: "How you open. What you never do.", area: true },
-  { key: "example_that_worked", label: "A message that got a reply", hint: "Your best tone anchor.", area: true },
+const LAYERS = [
+  { title: "WHO — who you sell to", note: "Auto-fill from Sillage, then refine. The tools already know this.", who: true, fields: [
+    { key: "icp", label: "ICP", hint: "Company profile, personas you win with, and who is NOT a fit.", area: true },
+  ]},
+  { title: "WHAT — what you sell", note: "Seller-only. No data tool has this.", fields: [
+    { key: "what_we_sell", label: "Product & value", hint: "The product, the value, the problem it kills.", area: true },
+    { key: "competitors", label: "Competitors", hint: "Who you displace or lose to.", area: false },
+    { key: "proof_assets", label: "Proof to cite", hint: "Case studies, integrations, logos.", area: false },
+  ]},
+  { title: "HOW — how you reach out", note: "Feeds the drafts.", fields: [
+    { key: "tone_of_voice", label: "Tone of voice", hint: "How you open. What you never do.", area: true },
+    { key: "example_that_worked", label: "A message that got a reply", hint: "Your best tone anchor.", area: true },
+  ]},
+  { title: "WHY-GOOD — what makes a prospect hot for you", note: "The judgment no data tool has. This is what sharpens your scoring.", fields: [
+    { key: "why_good", label: "Your 2-3 rules", hint: "e.g. 'recent VP Sales change', 'already using a competitor', 'hiring SDRs fast'.", area: true },
+  ]},
 ];
 
 const SOURCES = [
@@ -26,6 +36,13 @@ export default function Onboarding() {
   const [ctx, setCtx] = useState<Record<string, string>>({});
   const [conns, setConns] = useState<Record<string, { mode: string; connected: boolean }>>({});
   const [cfg, setCfg] = useState({ destination: "Dashboard", cadence: "Once a day", count: 5 });
+  const [pulled, setPulled] = useState(false);
+
+  async function pullPersona() {
+    const r = await fetch("/api/persona").then((x) => x.json()).catch(() => null);
+    if (r?.icp) { setCtx({ ...ctx, icp: r.icp }); setPulled(true); }
+    else alert(r?.error || "No Sillage persona found — connect Sillage first.");
+  }
 
   useEffect(() => {
     try {
@@ -58,13 +75,23 @@ export default function Onboarding() {
       {step === 1 && (
         <>
           <p className="lede"><span className="drop">A</span> prospect is only good relative to what you sell. Set this once — every score and every draft is measured against it.</p>
-          {CTX_FIELDS.map((f) => (
-            <div className="field" key={f.key}>
-              <label>{f.label}</label>
-              <div className="hint">{f.hint}</div>
-              {f.area
-                ? <textarea rows={3} value={ctx[f.key] ?? ""} onChange={(e) => setCtx({ ...ctx, [f.key]: e.target.value })} />
-                : <input value={ctx[f.key] ?? ""} onChange={(e) => setCtx({ ...ctx, [f.key]: e.target.value })} />}
+          {LAYERS.map((L) => (
+            <div className="layer" key={L.title}>
+              <div className="layer-h">{L.title}<span className="layer-note">{L.note}</span></div>
+              {L.who && (
+                <button className="ghost" onClick={pullPersona} style={{ marginBottom: 10 }}>
+                  {pulled ? "✓ pulled from Sillage — edit below" : "Pull my persona from Sillage ↓"}
+                </button>
+              )}
+              {L.fields.map((f) => (
+                <div className="field" key={f.key}>
+                  <label>{f.label}</label>
+                  <div className="hint">{f.hint}</div>
+                  {f.area
+                    ? <textarea rows={3} value={ctx[f.key] ?? ""} onChange={(e) => setCtx({ ...ctx, [f.key]: e.target.value })} />
+                    : <input value={ctx[f.key] ?? ""} onChange={(e) => setCtx({ ...ctx, [f.key]: e.target.value })} />}
+                </div>
+              ))}
             </div>
           ))}
           <div className="row"><button className="primary" onClick={() => setStep(2)}>Next: connect your data →</button></div>
