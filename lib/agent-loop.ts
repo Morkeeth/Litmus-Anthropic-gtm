@@ -15,6 +15,7 @@ import { listSignals, getLead } from "../src/sillage";
 import { peopleLookup, enrichContacts } from "../src/fullenrich";
 import { normalizeSillageDetection, normalizeFullEnrichProfile, mergeFullEnrichContactInfo } from "../src/normalize";
 import { lookupRelationship } from "../src/relationship";
+import { loadFeedback } from "../src/feedback";
 import { filterSuppressed, recordSurfaced } from "./ledger";
 
 const MODEL = process.env.LITMUS_MODEL || "claude-sonnet-5";
@@ -50,8 +51,15 @@ You receive a BATCH of ${batchSize} prospects as a JSON array in the user messag
 \`signal_id\`, \`signal\` (the intent event), \`sillage_lead_context\` (Sillage's own lead data — background ONLY, it can NEVER support the \`real\` factor: verifying a Sillage signal with Sillage data is circular), and \`warm_path\`.
 
 Tools:
-- **verify_person** — live FullEnrich lookup. The ONLY evidence that justifies \`real\` > 0.5. It costs credits: triage on icp_fit/urgent from the batch first, then verify only the candidates that could plausibly rank in the top ${topN} (at most ${Math.max(topN * 2, 4)} calls). Skip prospects that are obvious icp_fit zeros.
+- **verify_person** — live FullEnrich lookup. Confirms the PERSON is real: found in FullEnrich at the claimed account. \`real\` > 0.5 requires a verify_person result. It costs credits: triage on icp_fit/urgent from the batch first, then verify only the candidates that could plausibly rank in the top ${topN} (at most ${Math.max(topN * 2, 4)} calls). Skip prospects that are obvious icp_fit zeros.
+
+Data precedence (HARD RULE): Sillage is fresher than FullEnrich for recent job changes — FullEnrich's index lags. If verify_person finds the person at the claimed account but shows an OLDER title/role than the Sillage signal claims, that is expected lag, NOT a contradiction: Sillage takes precedence on the fresh change, and \`real\` may still be 1.0 (cite both sources in evidence). Kill \`real\` only when the person is not found, has left the account, or the account itself is unverifiable.
 - **emit_ranked** — call EXACTLY ONCE, when triage and verification are done, with an assessment for EVERY prospect in the batch. Unverified prospects: \`real\` capped at 0.5 with an "inconclusive" evidence item. Full drafts are required only for your top ${topN}; lower-ranked prospects may have an empty drafts array.
+
+Batch judgment (you are RANKING a batch, not scoring rows in isolation):
+- Signals sharing an account are ONE account story. Cross-reference them: pick the single strongest entry to carry the account, and make each sibling's rank_reason point at it ("second signal on Ramp — Max Freeman's SVP entry carries this account"). Never put two near-identical pitches on the same account in the top ${topN}; corroborating sibling signals should strengthen the carrier's why_now instead.
+- rank_reason must be comparative across the batch — say what puts this prospect above or below its neighbors ("edges out the Ramp promo: fresher trigger plus a live warm path"), so the list reads like one rep's decisive ordering.
+- The top ${topN} should be diverse accounts, not a monoculture of one.
 
 Do not output prose. Work: triage -> verify plausible winners -> emit_ranked.`;
 }
@@ -61,8 +69,9 @@ Do not output prose. Work: triage -> verify plausible winners -> emit_ranked.`;
 const VERIFY_TOOL: Anthropic.Tool = {
   name: "verify_person",
   description:
-    "Verify a prospect against FullEnrich (live people/lookup): confirms whether the person is in the claimed role NOW. " +
-    "The only valid source for the `real` factor. Costs credits — call only for prospects that could plausibly rank.",
+    "Verify a prospect against FullEnrich (live people/lookup): confirms the person exists and is at the claimed account. " +
+    "Required for `real` > 0.5. FullEnrich may lag fresh job changes — an older title than the signal claims is expected " +
+    "lag, not a contradiction (Sillage takes precedence on the fresh change). Costs credits — call only for prospects that could plausibly rank.",
   input_schema: {
     type: "object",
     properties: {
@@ -144,17 +153,24 @@ const EMIT_TOOL: Anthropic.Tool = {
 };
 
 // LITMUS.md formula (authoritative): base = 100*real*icp_fit ; score = base*(0.4 + 0.35*urgent + 0.25*warm)
-function composite(factors: ScoreFactor[]): number {
+export function composite(factors: ScoreFactor[]): number {
   const f = (k: string) => factors.find((x) => x.key === k)?.value ?? 0;
   return Math.round(100 * f("real") * f("icp_fit") * (0.4 + 0.35 * f("urgent") + 0.25 * f("warm")));
 }
 
 // ---------- the loop ----------
 
-interface BatchEntry {
+export interface BatchEntry {
   signal: Signal;
   sillageLead?: EnrichedContact; // Sillage-sourced context (never backs `real`)
   warm: unknown;
+}
+
+// Injection points for the offline eval harness (scripts/eval-agent-loop.ts):
+// stub verify_person so iterations burn zero FullEnrich credits and stay deterministic.
+export interface AgentLoopOptions {
+  verify?: (input: Record<string, any>, verified: Map<string, EnrichedContact>) => Promise<string>;
+  feedback?: Feedback[];
 }
 
 async function runVerify(input: Record<string, any>, verified: Map<string, EnrichedContact>): Promise<string> {
@@ -174,14 +190,16 @@ async function runVerify(input: Record<string, any>, verified: Map<string, Enric
   }
 }
 
-async function agentLoop(
+export async function agentLoop(
   entries: BatchEntry[],
   ctx: ClientContext,
   topN: number,
+  opts: AgentLoopOptions = {},
 ): Promise<{ assessments: any[]; verified: Map<string, EnrichedContact> }> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  const system = agentSystemPrompt(ctx, [], entries.length, topN);
+  const system = agentSystemPrompt(ctx, opts.feedback ?? loadFeedback(15), entries.length, topN);
   const verified = new Map<string, EnrichedContact>();
+  const doVerify = opts.verify ?? runVerify;
 
   const batch = entries.map((e) => ({
     signal_id: e.signal.signal_id,
@@ -198,7 +216,7 @@ async function agentLoop(
     const forceEmit = turn === MAX_TURNS - 1;
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: 8000,
+      max_tokens: 32000, // emit_ranked carries the whole batch — a truncated tool_use arrives with empty input
       system,
       messages,
       tools: [VERIFY_TOOL, EMIT_TOOL],
@@ -209,7 +227,18 @@ async function agentLoop(
     const emit = toolUses.find((t) => t.name === "emit_ranked");
     if (emit) {
       const out = emit.input as any;
-      return { assessments: Array.isArray(out?.assessments) ? out.assessments : [], verified };
+      if (Array.isArray(out?.assessments) && out.assessments.length > 0) {
+        return { assessments: out.assessments, verified };
+      }
+      // truncated/empty emit (e.g. max_tokens hit mid-JSON) — ask for a tighter re-emit instead of returning nothing
+      messages.push({ role: "assistant", content: res.content });
+      messages.push({
+        role: "user",
+        content: [
+          { type: "tool_result" as const, tool_use_id: emit.id, content: "emit_ranked arrived empty/truncated. Call it again with the full assessments array; keep drafts short and skip drafts outside the top N." },
+        ],
+      });
+      continue;
     }
     if (res.stop_reason !== "tool_use" || toolUses.length === 0) {
       // model stopped talking instead of emitting — force the terminal tool next turn
@@ -223,7 +252,7 @@ async function agentLoop(
       toolUses.map(async (tu) => ({
         type: "tool_result" as const,
         tool_use_id: tu.id,
-        content: tu.name === "verify_person" ? await runVerify(tu.input as any, verified) : `unknown tool ${tu.name}`,
+        content: tu.name === "verify_person" ? await doVerify(tu.input as any, verified) : `unknown tool ${tu.name}`,
       })),
     );
     messages.push({ role: "user", content: results });
