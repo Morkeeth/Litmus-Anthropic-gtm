@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { recordAction } from "../../../lib/ledger";
 import { recordFeedback } from "../../../src/feedback";
+import { supabase } from "../../../lib/supabase";
 import type { Feedback } from "../../../src/types";
 
 // The review step — closes the learning loop.
@@ -18,7 +19,11 @@ export async function POST(req: Request) {
   };
   const at = new Date().toISOString();
   const events: Feedback[] = [];
-  const push = (f: Feedback) => { recordFeedback(f); events.push(f); };
+  const push = (f: Feedback) => {
+    recordFeedback(f);
+    events.push(f);
+    if (supabase) supabase.from("feedback").insert({ signal_id: f.signal_id, target: f.target ?? null, verdict: f.verdict, reason: f.reason ?? null }).then(() => {}, () => {});
+  };
 
   if (b.lead?.verdict) push({ signal_id: b.signal_id ?? "", kind: "output_eval", target: "lead", verdict: b.lead.verdict, reason: b.lead.reason, at });
   if (b.message?.verdict) push({ signal_id: b.signal_id ?? "", kind: "output_eval", target: "message", verdict: b.message.verdict, reason: b.message.reason, at });

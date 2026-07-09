@@ -5,7 +5,7 @@ import { readBriefCache } from "../../../lib/cache";
 // The dashboard's default load. Serves the PRE-WARMED real brief if one exists (instant, no 3-min
 // wait), else the curated mock. So the dashboard shows real cached data without running live on stage.
 export async function GET() {
-  const cache = readBriefCache();
+  const cache = await readBriefCache();
   if (cache?.prospects?.length) {
     return NextResponse.json({ prospects: cache.prospects, source: "cache", scored_at: cache.at });
   }

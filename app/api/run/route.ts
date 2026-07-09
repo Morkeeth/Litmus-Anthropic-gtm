@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       prospects = await runIcpWorkflow(clientContext, topN, targetCompanies);
     }
 
-    writeBriefCache(prospects, { source: source ?? "fullenrich" }); // pre-warm: dashboard reads this instantly
+    await writeBriefCache(prospects, { source: source ?? "fullenrich" }); // pre-warm: dashboard reads this instantly
 
     // Deliver to the chosen destination (dashboard is the default — the response IS the delivery).
     let delivered = "dashboard";
