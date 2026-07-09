@@ -1,54 +1,58 @@
 # CONTEXT — where Litmus stands (living doc)
 
-Team onboarding + running state. Pull, read this, jump in. Updated as we go.
+Team state. Pull, read this, jump in. ~2h to submission (live demo).
 
-## What Litmus is (one line)
-The scoring layer for intent: score the firehose against what you sell, rank the ten that matter, draft the outreach, send it. Track 1 — Acquisition. The magic is `LITMUS.md`.
+## What Litmus is
+The scoring layer for intent: score the firehose against what you sell, rank the few that matter *with a pinpointed why-now*, draft the outreach, deliver it, send it. Track 1 — Acquisition. The IP is `LITMUS.md`.
 
 ## Live
-- **Deployed:** https://litmus-roan.vercel.app (Next.js on Vercel, auto via `npx vercel --prod`).
-- **Build:** green. `npm run dev` locally on :3000.
+- **Deployed:** https://litmus-roan.vercel.app (Slack env is on Vercel; Unipile + HubSpot tokens are LOCAL only).
+- **Slack channel:** #litmus-test (bot `litmus_bot`). `POST /api/slack-test` posts a sample brief.
+- Build green. `npm run dev` locally on :3000.
 
 ## The pipeline (all real)
 ```
-sources ─▶ normalize ─▶ [ LITMUS.md scoring (Sonnet) ] ─▶ top N ranked + drafts ─▶ output ─▶ Unipile send
+sources → normalize → [LITMUS.md score + why-now] → signal-aware dedup → top N → drafts → deliver → approve → send → feedback tunes it
 ```
-Score = `100 × real × icp_fit × (0.6 + 0.25·urgent + 0.15·warm)`. Sonnet for cost.
+Score = `100 × real × icp_fit × (0.4 + 0.35·urgent + 0.25·warm)`. **Urgency (why-now) dominates** — a lead with no trigger floors ~40, not "work today". Sonnet for cost.
 
-## Sources (all verified working)
-- **FullEnrich** — live, 2550 credits. Two roles: prospect DB (`/people/search`) + enrich (email/phone) + reverse-email. Client: `src/fullenrich.ts`.
-- **Sillage** — MCP over HTTP w/ Bearer key (no OAuth). Client: `src/sillage.ts`. Workspace SEEDED (persona, 5 accounts, keyword agent, run #404 completed — 0 keyword detections so far). Feedable entirely via API.
-- **Anthropic** — server-side (ours, users never bring a key). `claude-sonnet-5`.
-- **Unipile** — connected (Gmail + Telegram). Send verified via self-test. ⚠️ LOCAL ONLY — see safety below.
+## Sources (verified working)
+- **FullEnrich** — DB (`/people/search`), enrich (email/phone), reverse-email. 2550 credits. The reliable backbone.
+- **Sillage** — MCP over HTTP w/ Bearer key (no OAuth). Seeded via API (persona/accounts/agent/run). Keyword run = 0 detections (sparse); use interaction agents for real ones.
+- **HubSpot** — read (source, Flow E) live; write (sink) guarded by `HUBSPOT_WRITE_ARMED`.
+- **Anthropic** — server-side (ours). `claude-sonnet-5`.
+- **Unipile** — Gmail + Telegram connected. Send tested to owner inbox. Guarded.
 
-## Flows (source-optional — Litmus works without any single source)
-- **Flow A** (default): FullEnrich ICP search → score. Works on Enrich alone. `/api/run`.
-- **Flow B**: Sillage detections → `get_lead` → score. `source:"sillage"`.
-- **Flow C**: CRM/CSV contacts → score. No FullEnrich/Sillage. `contacts:[...]`.
-- **Flow D**: email list → FullEnrich reverse-lookup → score. `emails:[...]`.
+## 5 source flows (Litmus works without any single source)
+FullEnrich ICP search (default, targets real accounts) · Sillage detections · HubSpot contacts · CRM/CSV · reverse-email.
 
 ## App
-- `/onboarding` — 3 steps: context → connect sources (key/MCP) → output config (destination, cadence, count).
-- `/dashboard` — CRM cloud → filter animation → ranked brief w/ scores, factors, drafts, approve/decline.
-- `/api/run` (live pipeline, config-driven), `/api/prospects` (mock fallback), `/api/feedback`, `/api/send` (Unipile, guarded).
+- `/onboarding` — 4-layer context (WHO+Sillage-pull / WHAT / HOW / **WHY-GOOD**) → connect sources → output config (destination/cadence/count).
+- `/dashboard` — CRM cloud → filter animation → ranked brief w/ score, **why-now (trigger/changed/why-buying)**, factors, drafts, approve/decline. `?focus=<id>` = single-prospect review (Slack deep-link lands here).
+- APIs: `/api/run` (live, source+destination+targetCompanies), `/api/prospects` (mock), `/api/feedback`, `/api/send` (guarded), `/api/slack-test`, `/api/persona`.
 
-## ⚠️ Unipile / send SAFETY (read before touching)
-- Key is **LOCAL `.env` ONLY** — never in git, never on Vercel. Do not add it to Vercel.
-- `/api/send` is **dry-run by default** (`LITMUS_SEND_ARMED` must be `1` to transmit), defaults to owner inbox, refuses external addresses without `confirmExternal:true`. NO Telegram-send code exists.
-- Dashboard "Approve" is a SIMULATED send — it does not call Unipile.
+## Learning + dedup
+- **Feedback loop** (wired): 👍/👎 → `feedback.jsonl` → injected as few-shot into scoring. Reject → it re-ranks.
+- **Dedup ledger**: no repeat leads within cooldown (surfaced 7d / declined 21d / sent 60d) UNLESS job/company/signal changed or score +15.
+- Both ephemeral on Vercel (reset on cold start) → demo the learning locally or narrate.
 
-## Next (help wanted)
-- [ ] Onboarding 4-layer context (WHO pulled from Sillage persona / WHAT / HOW / WHY-GOOD) — the IP upgrade. Owner: Oscar + me.
-- [ ] Tune `LITMUS.md` weights on real output. Owner: Oscar. Highest leverage.
-- [ ] Real Sillage detections — try interaction agents (competitor/customer) or broader keywords; keyword run found 0.
-- [ ] HubSpot output sink (account now available) — stretch.
-- [ ] Slack sink live (Block Kit) when a webhook is added.
+## ⚠️ Send SAFETY
+- Unipile + HubSpot write tokens LOCAL only. `/api/send` dry-run unless `LITMUS_SEND_ARMED=1`, external refused without `confirmExternal`. HubSpot write needs `HUBSPOT_WRITE_ARMED=1`. Dashboard "Approve" is simulated. No Telegram-send code.
 
-## Roadmap (post-hackathon / stretch)
-- **Knowledge base / RAG over seller collateral** (Jonathan's pitch, Jul 9): retrieve the seller's case studies, battlecards, winning emails per prospect to ground scoring + drafts. Real depth lever + moat. NOT for the hackathon (scope). Cheap first step: a "paste your docs" context field before committing to a vector DB.
-- **Voice channel (fun bonus demo)**: Grok voice agent builder (x.ai/voice) or Gradium (gradium.ai). Track 1 lists *phone* as a channel — an AI voice briefing of the day's top 5, or a voice call to a prospect, is a memorable demo + "Most Creative" / "Best use of Gradium" side-prize bait. Stretch only, never on the critical path.
-- **Real Sillage intent**: keyword agent found 0 detections. Try interaction agents (competitor/customer/champion) for LinkedIn-engagement signals.
-- **Persist the ledger + feedback** (KV/Supabase) so dedup + learning survive serverless cold starts.
+## Demo guidance (read before the pitch)
+- **Lead with the curated brief** (`92` champion → `8` killed false-positive → `5` out-of-ICP) — perfect distribution, reliable, the whole story in one screen. The 92-vs-8 contrast is the money moment.
+- **"Run live" = the "and it's real" proof** — real in-ICP people from FullEnrich, honestly scored 40-60 (no trigger → not inflated).
+- **A 90+ hero needs a real trigger** (job change / funding / Sillage champion). Optional: add recent-job-changers filter to make live runs produce heroes.
+- Don't depend on live Sillage firing on cue. Tell the fusion + seeded-workspace story.
+
+## Next (2h to submission)
+- [ ] Fill real client context + WHY-GOOD (Oscar)
+- [ ] Curate + rehearse the 92-vs-8 story (Oscar)
+- [ ] (optional) live 90+ hero via recent-job-changers filter (~10m)
+- [ ] Slack: destination=Slack in a live run posts the brief (works now)
+
+## Roadmap (post-hackathon)
+Knowledge base / RAG over seller collateral · Voice channel (Grok x.ai/voice or Gradium) · real Sillage interaction agents · persist ledger/feedback (KV/Supabase) · HubSpot App Card.
 
 ## Rules
-Trunk-based, commit every ~20-30 min, push immediately, `main` always demoable. See `WORKFLOW.md`. Keys: `.env` from `.env.example` (Anthropic/FullEnrich/Sillage on Vercel; Unipile local only).
+Trunk-based, commit often, push immediately, `main` always demoable. See `WORKFLOW.md`. Keys: `.env` from `.env.example`.
