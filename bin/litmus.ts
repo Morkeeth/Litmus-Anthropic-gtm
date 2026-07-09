@@ -1,13 +1,15 @@
 // Litmus CLI — the terminal door over the headless engine. Same scoring, no browser.
-// Usage:
-//   npx tsx bin/litmus.ts brief [--source sillage-agent|sillage|fullenrich|hubspot] [--top 5] [--json]
+// Commands:
+//   litmus brief   [--source sillage-agent|sillage|fullenrich|hubspot] [--top 5] [--json]
+//   litmus score   "<name>" [--company acme.com] [--title "VP Sales"]
+//   litmus sources                 # what's connected
+//   litmus help
 // Loads .env itself (standalone, not via Next).
 
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import type { ClientContext } from "../src/types";
 
-// --- tiny .env loader (no dep) ---
 if (existsSync(".env")) {
   for (const line of readFileSync(".env", "utf8").split("\n")) {
     const m = line.match(/^\s*([A-Z0-9_]+)=(.*)$/);
@@ -15,7 +17,27 @@ if (existsSync(".env")) {
   }
 }
 
-// --- context: client-context.json if present, else a demo default ---
+// ---- ANSI (zero-dep) ----
+const on = process.stdout.isTTY !== false;
+const e = (n: string) => (on ? n : "");
+const C = {
+  reset: e("\x1b[0m"), b: e("\x1b[1m"), dim: e("\x1b[2m"),
+  green: e("\x1b[32m"), yellow: e("\x1b[33m"), red: e("\x1b[31m"),
+  cyan: e("\x1b[36m"), gray: e("\x1b[90m"), mag: e("\x1b[35m"), white: e("\x1b[97m"),
+};
+const paint = (s: number) => (s >= 70 ? C.green : s >= 40 ? C.yellow : C.red);
+const verdict = (p: any) => {
+  const real = p.factors?.find((f: any) => f.key === "real")?.value ?? 0;
+  if (real < 0.3) return `${C.red}✕ NOISE${C.reset}`;
+  if (p.score >= 70) return `${C.green}▲ HOT${C.reset}`;
+  if (p.score >= 40) return `${C.yellow}◆ WATCH${C.reset}`;
+  return `${C.gray}· LOW${C.reset}`;
+};
+
+function banner() {
+  console.log(`\n${C.mag}${C.b}▓▓ LITMUS${C.reset}  ${C.dim}the scoring layer for intent${C.reset}\n`);
+}
+
 function loadContext(): ClientContext {
   const p = join(process.cwd(), "client-context.json");
   if (existsSync(p)) return JSON.parse(readFileSync(p, "utf8"));
@@ -26,48 +48,86 @@ function loadContext(): ClientContext {
     why_good: "Recent VP Sales/RevOps change; scaling GTM headcount; using a competitor.",
   };
 }
-
-function arg(name: string, def?: string): string | undefined {
+const arg = (name: string, def?: string) => {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : def;
+};
+const has = (name: string) => process.argv.includes(`--${name}`);
+
+function printProspect(p: any, i: number) {
+  const e2 = p.enriched ?? {};
+  const bar = paint(p.score) + "█".repeat(Math.round(p.score / 10)).padEnd(10, `${C.gray}·`) + C.reset;
+  console.log(`${C.gray}${String(i + 1).padStart(2)}${C.reset}  ${paint(p.score)}${C.b}${String(p.score).padStart(3)}${C.reset} ${bar}  ${verdict(p)}  ${C.white}${C.b}${e2.full_name ?? "?"}${C.reset} ${C.dim}${e2.title ?? ""}${e2.company?.name ? ` @ ${e2.company.name}` : ""}${C.reset}`);
+  console.log(`     ${C.gray}${p.rank_reason}${C.reset}`);
+  if (p.why_now) console.log(`     ${C.cyan}⚡ ${p.why_now.trigger}${C.reset}`);
+  if (e2.work_email?.email) console.log(`     ${C.dim}✉ ${e2.work_email.email}${e2.mobile?.number ? `   ☎ ${e2.mobile.number}` : ""}${C.reset}`);
+  console.log("");
 }
 
-async function main() {
-  const cmd = process.argv[2] ?? "brief";
-  if (cmd !== "brief") {
-    console.log("usage: litmus brief [--source sillage-agent|sillage|fullenrich|hubspot] [--top 5] [--json]");
-    process.exit(1);
-  }
-  const source = arg("source", "fullenrich")!;
+async function cmdBrief() {
+  const source = arg("source", "sillage-agent")!;
   const top = parseInt(arg("top", "5")!, 10);
   const ctx = loadContext();
+  banner();
+  process.stdout.write(`${C.dim}scoring the ${source} firehose…${C.reset}\r`);
 
   const { runSillageAgent } = await import("../lib/agent-loop");
   const { runIcpWorkflow, runFromSillage, runFromHubspot } = await import("../lib/pipeline");
-
-  const run =
+  const prospects: any[] = await (
     source === "sillage-agent" ? runSillageAgent(ctx, top)
     : source === "sillage" ? runFromSillage(ctx, top)
     : source === "hubspot" ? runFromHubspot(ctx, top)
-    : runIcpWorkflow(ctx, top, ["Stripe", "Ramp", "Notion", "Vercel", "Brex"]);
+    : runIcpWorkflow(ctx, top, ["Stripe", "Ramp", "Notion", "Vercel", "Brex"]));
 
-  const prospects = await run;
+  if (has("json")) { console.log(JSON.stringify(prospects, null, 2)); return; }
 
-  if (arg("json") !== undefined || process.argv.includes("--json")) {
-    console.log(JSON.stringify(prospects, null, 2));
-    return;
-  }
-
-  console.log(`\n  LITMUS — today's brief (${source}) · ${prospects.length} to work\n`);
-  for (const p of prospects as any[]) {
-    const e = p.enriched ?? {};
-    const bar = "█".repeat(Math.round(p.score / 10)).padEnd(10, "·");
-    console.log(`  ${String(p.score).padStart(3)} ${bar}  ${e.full_name ?? "?"} — ${e.title ?? ""}${e.company?.name ? ` @ ${e.company.name}` : ""}`);
-    console.log(`      ${p.rank_reason}`);
-    if (p.why_now) console.log(`      why-now: ${p.why_now.trigger}`);
-    if (e.work_email?.email) console.log(`      ✉ ${e.work_email.email}`);
-    console.log("");
-  }
+  process.stdout.write(" ".repeat(50) + "\r");
+  console.log(`${C.b}today's brief${C.reset} ${C.dim}· ${source} · ${prospects.length} to work${C.reset}\n`);
+  prospects.forEach(printProspect);
+  const hot = prospects.filter((p) => p.score >= 70).length;
+  const noise = prospects.filter((p) => (p.factors?.find((f: any) => f.key === "real")?.value ?? 0) < 0.3).length;
+  console.log(`${C.gray}────────${C.reset}  ${C.green}${hot} hot${C.reset}  ${C.yellow}${prospects.length - hot - noise} watch${C.reset}  ${C.red}${noise} noise killed${C.reset}\n`);
 }
 
-main().catch((e) => { console.error("litmus error:", e?.message ?? e); process.exit(1); });
+async function cmdScore() {
+  const name = process.argv[3];
+  if (!name || name.startsWith("--")) { console.log(`usage: litmus score "Jane Doe" --company acme.com --title "VP Sales"`); return; }
+  banner();
+  process.stdout.write(`${C.dim}scoring ${name}…${C.reset}\r`);
+  const { runFromContacts } = await import("../lib/pipeline");
+  const scored = await runFromContacts(loadContext(), [{ full_name: name, company: arg("company"), title: arg("title") }], 1);
+  process.stdout.write(" ".repeat(40) + "\r");
+  if (!scored.length) { console.log(`${C.red}no result${C.reset}`); return; }
+  printProspect(scored[0], 0);
+}
+
+function cmdSources() {
+  banner();
+  const rows: [string, string, boolean][] = [
+    ["Anthropic", "the scoring engine", !!process.env.ANTHROPIC_API_KEY],
+    ["FullEnrich", "verify + email/phone", !!process.env.FULLENRICH_API_KEY],
+    ["Sillage", "intent signals", !!process.env.SILLAGE_API_KEY],
+    ["HubSpot", "CRM contacts", !!process.env.HUBSPOT_TOKEN],
+    ["Unipile", "email + LinkedIn send", !!process.env.UNIPILE_API_KEY],
+    ["Slack", "delivery", !!process.env.SLACK_BOT_TOKEN],
+  ];
+  for (const [n, d, ok] of rows) {
+    console.log(`  ${ok ? C.green + "●" : C.gray + "○"}${C.reset} ${C.b}${n.padEnd(11)}${C.reset} ${C.dim}${d}${C.reset}`);
+  }
+  console.log("");
+}
+
+function help() {
+  banner();
+  console.log(`  ${C.b}litmus brief${C.reset}   ${C.dim}--source sillage-agent|sillage|fullenrich|hubspot  --top 5  --json${C.reset}`);
+  console.log(`  ${C.b}litmus score${C.reset}   ${C.dim}"Jane Doe" --company acme.com --title "VP Sales"${C.reset}`);
+  console.log(`  ${C.b}litmus sources${C.reset} ${C.dim}what's connected${C.reset}\n`);
+}
+
+const cmd = process.argv[2] ?? "brief";
+const run =
+  cmd === "brief" ? cmdBrief()
+  : cmd === "score" ? cmdScore()
+  : cmd === "sources" ? Promise.resolve(cmdSources())
+  : Promise.resolve(help());
+run.catch((err: any) => { console.error(`${C.red}litmus error:${C.reset}`, err?.message ?? err); process.exit(1); });
