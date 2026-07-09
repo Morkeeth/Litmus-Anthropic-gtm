@@ -23,6 +23,12 @@ export async function POST(req: Request) {
   };
   const to = body.to ?? SELF_EMAIL;
   const isExternal = to.toLowerCase() !== SELF_EMAIL.toLowerCase();
+
+  // ARMING SWITCH: nothing transmits unless LITMUS_SEND_ARMED=1 in the environment.
+  // Default = dry-run: returns what WOULD be sent, sends nothing. Protects the live Gmail/Telegram.
+  if (process.env.LITMUS_SEND_ARMED !== "1") {
+    return NextResponse.json({ ok: true, dry_run: true, would_send: { channel: "email", to, subject: body.subject }, note: "not armed — set LITMUS_SEND_ARMED=1 to actually send" });
+  }
   if (isExternal && !body.confirmExternal) {
     return NextResponse.json(
       { error: "external send blocked — pass confirmExternal:true to send to a non-owner address", to },

@@ -100,9 +100,10 @@ export default function Dashboard() {
     setTimeout(() => setPhase("brief"), FUNNEL.length * 500 + 400);
   }
 
-  async function act(id: string, verdict: "up" | "down", reason?: string) {
-    setState((s) => ({ ...s, [id]: verdict === "up" ? "sent" : "killed" }));
-    fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ signal_id: id, kind: "output_eval", verdict, reason }) });
+  async function act(p: Prospect, verdict: "up" | "down", reason?: string) {
+    setState((s) => ({ ...s, [p.signal_id]: verdict === "up" ? "sent" : "killed" }));
+    const key = (p.enriched?.work_email?.email || (p.enriched?.full_name && `${p.enriched.full_name}@${p.enriched?.company?.name ?? ""}`) || p.signal_id).toLowerCase();
+    fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ signal_id: p.signal_id, key, kind: "output_eval", verdict, reason }) });
   }
 
   const live = prospects.filter((p) => state[p.signal_id] !== "killed");
@@ -181,8 +182,8 @@ export default function Dashboard() {
                       <button className="sent" disabled>✓ sent · email + linkedin</button>
                     ) : (
                       <>
-                        <button className="primary" onClick={() => act(p.signal_id, "up")}>Approve & send →</button>
-                        <button className="ghost" onClick={() => act(p.signal_id, "down", "rejected in brief")}>Decline</button>
+                        <button className="primary" onClick={() => act(p, "up")}>Approve & send →</button>
+                        <button className="ghost" onClick={() => act(p, "down", "rejected in brief")}>Decline</button>
                       </>
                     )}
                   </div>

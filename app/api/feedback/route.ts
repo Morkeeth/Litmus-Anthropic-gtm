@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
+import { recordAction } from "../../../lib/ledger";
 
 // Records the rep's approval-gate feedback (👍/👎 + reason).
-// This is the learning loop: recent feedback gets injected into LITMUS.md as {{FEEDBACK_EXAMPLES}}
-// so the scorer stops repeating rejected patterns.
-//
-// DEMO: accept + echo (serverless FS is ephemeral on Vercel). LIVE: persist to a store
-// (feedback.jsonl locally, or KV/Supabase) via src/feedback.ts recordFeedback().
+// - Feeds the learning loop (injected into LITMUS.md as {{FEEDBACK_EXAMPLES}}).
+// - Also writes to the suppression ledger so sent/declined leads don't reappear tomorrow.
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
+  const body = (await req.json().catch(() => ({}))) as { signal_id?: string; key?: string; verdict?: "up" | "down"; reason?: string };
   const event = { ...body, at: new Date().toISOString() };
-  // TODO live: recordFeedback(event) -> data/feedback.jsonl / KV
   console.log("[litmus feedback]", event);
+  if (body.key && body.verdict) recordAction(body.key, body.verdict === "up" ? "sent" : "declined");
   return NextResponse.json({ ok: true, event });
 }

@@ -3,62 +3,46 @@
 Team onboarding + running state. Pull, read this, jump in. Updated as we go.
 
 ## What Litmus is (one line)
+The scoring layer for intent: score the firehose against what you sell, rank the ten that matter, draft the outreach, send it. Track 1 — Acquisition. The magic is `LITMUS.md`.
 
-The scoring layer for intent: score the firehose against what you sell, rank the ten that matter, draft the outreach, send it. Track 1 — Acquisition. `real` + `icp_fit` gate the score, `urgent` + `warm` boost it. The magic is `LITMUS.md`.
+## Live
+- **Deployed:** https://litmus-roan.vercel.app (Next.js on Vercel, auto via `npx vercel --prod`).
+- **Build:** green. `npm run dev` locally on :3000.
 
-## The pipeline
-
+## The pipeline (all real)
 ```
-CRM ─▶ SILLAGE ─▶ FULLENRICH ─▶ LITMUS SCORE ─▶ ACTION ─▶ OUTPUT
-       intent     phone+email    Anthropic       Unipile    Slack / HubSpot / dashboard
+sources ─▶ normalize ─▶ [ LITMUS.md scoring (Sonnet) ] ─▶ top N ranked + drafts ─▶ output ─▶ Unipile send
 ```
-Two source-flows into one scorer:
-- **Flow A (works NOW):** FullEnrich `/people/search` by ICP → score → rank → enrich winners. No Sillage needed.
-- **Flow B (kickoff):** Sillage MCP signal → FullEnrich verifies → score.
+Score = `100 × real × icp_fit × (0.6 + 0.25·urgent + 0.15·warm)`. Sonnet for cost.
 
-## Run it locally
+## Sources (all verified working)
+- **FullEnrich** — live, 2550 credits. Two roles: prospect DB (`/people/search`) + enrich (email/phone) + reverse-email. Client: `src/fullenrich.ts`.
+- **Sillage** — MCP over HTTP w/ Bearer key (no OAuth). Client: `src/sillage.ts`. Workspace SEEDED (persona, 5 accounts, keyword agent, run #404 completed — 0 keyword detections so far). Feedable entirely via API.
+- **Anthropic** — server-side (ours, users never bring a key). `claude-sonnet-5`.
+- **Unipile** — connected (Gmail + Telegram). Send verified via self-test. ⚠️ LOCAL ONLY — see safety below.
 
-```
-npm install
-cp .env.example .env      # fill keys (see below)
-npm run dev               # http://localhost:3000
-```
-- `/` landing · `/onboarding` client context (set once) · `/dashboard` the morning brief.
-- Dashboard loads **mock** (always works). Hit **"run live ↻"** to run the real FullEnrich→score workflow (needs keys).
+## Flows (source-optional — Litmus works without any single source)
+- **Flow A** (default): FullEnrich ICP search → score. Works on Enrich alone. `/api/run`.
+- **Flow B**: Sillage detections → `get_lead` → score. `source:"sillage"`.
+- **Flow C**: CRM/CSV contacts → score. No FullEnrich/Sillage. `contacts:[...]`.
+- **Flow D**: email list → FullEnrich reverse-lookup → score. `emails:[...]`.
 
-## Where the API keys go
+## App
+- `/onboarding` — 3 steps: context → connect sources (key/MCP) → output config (destination, cadence, count).
+- `/dashboard` — CRM cloud → filter animation → ranked brief w/ scores, factors, drafts, approve/decline.
+- `/api/run` (live pipeline, config-driven), `/api/prospects` (mock fallback), `/api/feedback`, `/api/send` (Unipile, guarded).
 
-**Local:** in `.env` at the repo root (gitignored — never commit keys). From `.env.example`:
-- `FULLENRICH_API_KEY` — Bearer key from FullEnrich dashboard. **Needed for live run.**
-- `ANTHROPIC_API_KEY` — **needed for live run** (the scoring call).
-- `UNIPILE_DSN` + `UNIPILE_API_KEY` — from Unipile dashboard (7-day trial). For send.
-- `SLACK_WEBHOOK_URL` — incoming webhook. For the Slack sink.
-- `HUBSPOT_TOKEN` — private-app token (dev test account). Stretch.
-- Sillage: **no key** — connect via `claude mcp add --transport http sillage https://api.getsillage.com/api/mcp/v2` (OAuth).
-
-**Vercel:** Project Settings → Environment Variables → add the same keys → redeploy. (`.env` is not deployed.)
-
-## Deploy
-
-`npx vercel --prod`, or connect the repo at vercel.com/new (Next.js auto-detected). Every push to `main` auto-deploys.
-
-## Status (what's built)
-
-- ✅ Next.js app: landing, onboarding, dashboard (Editorial Brief design). Build passing.
-- ✅ Engine: `src/fullenrich.ts` (verified), `src/score.ts` (Anthropic scoring, real), `src/normalize.ts`, `src/relationship.ts`, `src/unipile.ts`, `src/sinks.ts`, `src/feedback.ts`.
-- ✅ `LITMUS.md` — the scoring prompt (the IP).
-- ✅ Live workflow `/api/run` (Flow A) — needs keys.
-- ✅ Mock fallback `/api/prospects` — always demoable.
+## ⚠️ Unipile / send SAFETY (read before touching)
+- Key is **LOCAL `.env` ONLY** — never in git, never on Vercel. Do not add it to Vercel.
+- `/api/send` is **dry-run by default** (`LITMUS_SEND_ARMED` must be `1` to transmit), defaults to owner inbox, refuses external addresses without `confirmExternal:true`. NO Telegram-send code exists.
+- Dashboard "Approve" is a SIMULATED send — it does not call Unipile.
 
 ## Next (help wanted)
+- [ ] Onboarding 4-layer context (WHO pulled from Sillage persona / WHAT / HOW / WHY-GOOD) — the IP upgrade. Owner: Oscar + me.
+- [ ] Tune `LITMUS.md` weights on real output. Owner: Oscar. Highest leverage.
+- [ ] Real Sillage detections — try interaction agents (competitor/customer) or broader keywords; keyword run found 0.
+- [ ] HubSpot output sink (account now available) — stretch.
+- [ ] Slack sink live (Block Kit) when a webhook is added.
 
-- [ ] **Sillage MCP live pull** → cache real signals (Flow B). Owner: Pierre. Needs OAuth via Claude Code.
-- [ ] **Unipile send** wired to the Approve button (email + LinkedIn to an existing connection). Owner: Pierre.
-- [ ] **Tune `LITMUS.md`** weights + rubric on real output. Owner: Oscar. **Highest leverage — it's what's judged.**
-- [ ] **Slack sink** live (Block Kit). Owner: Desiree.
-- [ ] **Design tuning** on the Vercel preview. Owner: Desiree.
-- [ ] HubSpot sink (stretch) · Gradium voice (stretch).
-
-## Ownership / rules
-
-See `WORKFLOW.md`. Trunk-based, commit every 20-30 min, push immediately, `main` always demoable, types.ts frozen 10:00, full freeze 16:30.
+## Rules
+Trunk-based, commit every ~20-30 min, push immediately, `main` always demoable. See `WORKFLOW.md`. Keys: `.env` from `.env.example` (Anthropic/FullEnrich/Sillage on Vercel; Unipile local only).

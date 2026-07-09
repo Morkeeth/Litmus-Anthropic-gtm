@@ -5,7 +5,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Signal, EnrichedContact, ScoredSignal, ClientContext } from "../src/types";
 import { peopleSearch, enrichContacts, reverseEmail } from "../src/fullenrich";
 import { normalizeFullEnrichProfile, mergeFullEnrichContactInfo } from "../src/normalize";
-import { scoreAndRank, type ScoreInput } from "../src/score";
+import { scoreAll, type ScoreInput } from "../src/score";
+import { filterSuppressed, recordSurfaced } from "./ledger";
+
+// Score -> drop already-surfaced (cooldown) -> top N -> log the surfaced set. The dedup gate.
+async function rankSuppress(inputs: ScoreInput[], ctx: ClientContext, topN: number): Promise<ScoredSignal[]> {
+  const scored = await scoreAll(inputs, { clientContext: ctx, topN });
+  const kept = filterSuppressed(scored).slice(0, topN);
+  recordSurfaced(kept);
+  return kept;
+}
 
 const MODEL = process.env.LITMUS_MODEL || "claude-sonnet-5";
 
@@ -83,7 +92,7 @@ export async function runIcpWorkflow(ctx: ClientContext, topN = 7): Promise<Scor
     signal: profileToSignal(p),
     enriched: normalizeFullEnrichProfile({ people: [p] }),
   }));
-  const ranked = await scoreAndRank(inputs, { clientContext: ctx, topN });
+  const ranked = await rankSuppress(inputs, ctx, topN);
 
   // 3. Enrich the winners for email/phone (best-effort; the slow leg stays off the score path).
   try {
@@ -142,7 +151,7 @@ export async function runFromContacts(
       work_email: c.email ? { email: c.email, status: "UNVERIFIED" } : undefined,
     } as EnrichedContact,
   }));
-  return scoreAndRank(inputs, { clientContext: ctx, topN });
+  return rankSuppress(inputs, ctx, topN);
 }
 
 // Flow B: Sillage intent detections. Pull signals -> get_lead per detection -> score (with real intent).
@@ -170,7 +179,7 @@ export async function runFromSillage(ctx: ClientContext, topN = 7): Promise<Scor
       : undefined;
     inputs.push({ signal, enriched });
   }
-  return scoreAndRank(inputs, { clientContext: ctx, topN });
+  return rankSuppress(inputs, ctx, topN);
 }
 
 // Flow D: a list of emails (webinar, export). FullEnrich reverse-lookup -> full profile -> score.
@@ -188,5 +197,5 @@ export async function runFromEmails(ctx: ClientContext, emails: string[], topN =
       // skip unresolvable emails
     }
   }
-  return scoreAndRank(inputs, { clientContext: ctx, topN });
+  return rankSuppress(inputs, ctx, topN);
 }

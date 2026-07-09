@@ -136,8 +136,13 @@ function safeParse(s: string): any[] {
   }
 }
 
-// Score the batch, rank, return only the top N — the overloaded rep's worklist.
-export async function scoreAndRank(inputs: ScoreInput[], cfg: ScoreConfig): Promise<ScoredSignal[]> {
+// Score the whole batch and sort (no slice) — suppression + top-N happen downstream.
+export async function scoreAll(inputs: ScoreInput[], cfg: ScoreConfig): Promise<ScoredSignal[]> {
   const scored = await Promise.all(inputs.map((i) => scoreSignal(i, cfg)));
-  return scored.sort((a, b) => b.score - a.score).slice(0, cfg.topN ?? 7);
+  return scored.sort((a, b) => b.score - a.score);
+}
+
+// Score, rank, top N. (CLI/back-compat; pipeline flows add suppression around scoreAll.)
+export async function scoreAndRank(inputs: ScoreInput[], cfg: ScoreConfig): Promise<ScoredSignal[]> {
+  return (await scoreAll(inputs, cfg)).slice(0, cfg.topN ?? 7);
 }

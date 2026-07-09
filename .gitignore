@@ -6,6 +6,7 @@ node_modules/
 !.env.example
 client-context.md
 data/feedback.jsonl
+data/ledger.jsonl
 dist/
 *.log
 .DS_Store
