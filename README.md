@@ -1,5 +1,13 @@
 # 🧪 Litmus — the scoring layer for leads
 
+**Litmus scores a firehose of sales intent signals against what you actually sell and hands a rep three leads to work this morning, with the evidence attached.**
+
+- Problem: intent and CRM feeds are noisy and nobody checks the signals before a rep acts on them.
+- For: sales reps and GTM teams buried in "hot" accounts.
+- What it does: normalises CRM, Sillage and FullEnrich data, scores it with an Anthropic agent loop on a fit x way-in framework, dedups and verifies, then drafts email, Telegram, LinkedIn and call scripts for approval. One engine behind a dashboard, Slack, CLI and MCP.
+- Try it: [litmus-roan.vercel.app](https://litmus-roan.vercel.app) or `npm install && npm run dev`. Built at the Agentic GTM Hackathon, Station F, July 2026.
+
+
 **Turns your intent firehose into 3 leads to work this morning — with proof.**
 
 Built at the **Agentic GTM Hackathon** (Anthropic × FullEnrich × Sillage, Station F, Jul 2026) · Track 1: Acquisition.
