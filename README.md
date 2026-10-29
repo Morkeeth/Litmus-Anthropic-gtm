@@ -1,4 +1,4 @@
-# 🧪 Litmus ;  the scoring layer for leads
+# 🧪 Litmus: the scoring layer for leads
 
 ## TLDR
 
