@@ -20,7 +20,7 @@ Start with the linked source, setup and evidence. Recorded demos and sample data
 **Turns your intent firehose into 3 leads to work this morning ;  with proof.**
 
 Built at the **Agentic GTM Hackathon** (Anthropic × FullEnrich × Sillage, Station F, Jul 2026) · Track 1: Acquisition.
-🔗 **Live demo:** https://litmus-roan.vercel.app · 📺 Demo video: _(link)_ · 💻 One engine, four doors: dashboard · Slack · CLI · MCP.
+🔗 **Live demo:** https://litmus-roan.vercel.app · Demo video is not linked in this checkout · 💻 One engine, four doors: dashboard · Slack · CLI · MCP.
 
 ---
 
